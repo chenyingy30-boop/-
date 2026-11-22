@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>税法题库 · 分章乱序交互刷题</title>
+  <title>税法</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <style>
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
-      background-color: #f8fafc;
-      color: #0f172a;
+      background-color: #EBF0F5;
+      color: #0F172A;
     }
     .option-btn {
       transition: all 0.15s ease;
@@ -28,30 +28,33 @@
 </head>
 <body class="min-h-screen flex flex-col">
   <!-- Top Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+  <header class="bg-[#F6F8FB] border-b border-[#D4DEE8] sticky top-0 z-20">
     <div class="max-w-3xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2.5 min-w-0">
         <div class="w-9 h-9 rounded-lg bg-[#1E3A5F] text-white flex items-center justify-center font-bold text-sm shrink-0">
           税法
         </div>
         <div class="min-w-0">
-          <h1 class="text-base sm:text-lg font-bold text-slate-900 truncate">税法课程 · 分章乱序刷题</h1>
-          <p id="scopeSummary" class="text-xs text-slate-500 truncate">已选 6 个章节 · 共 194 题</p>
+          <h1 class="text-base sm:text-lg font-bold text-[#0F172A] truncate">税法</h1>
+          <p id="scopeSummary" class="text-xs text-[#64748B] truncate">已选 6 个章节 · 共 194 题</p>
         </div>
       </div>
 
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <button id="btnOpenSync" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+        <button id="btnOpenSync" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] transition">
           同步记录
         </button>
-        <button id="btnOpenImport" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+        <button id="btnOpenImport" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] transition">
           导入新题
         </button>
-        <button id="btnToggleScope" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+        <button id="btnToggleScope" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] transition">
           选章节
         </button>
-        <button id="btnToggleCard" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+        <button id="btnToggleCard" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] transition">
           答题卡
+        </button>
+        <button id="btnExamMode" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-[#1E3A5F] bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">
+          考试模式(20题)
         </button>
         <button id="btnShuffle" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition flex items-center gap-1">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -72,15 +75,15 @@
         <button type="button" data-type="wrong" id="btnTypeWrong" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">错题本 (0)</button>
       </div>
 
-      <div class="text-xs text-slate-600 flex items-center gap-3">
-        <span>已答 <strong id="statAnswered" class="text-slate-900">0</strong></span>
+      <div class="text-xs text-[#475569] flex items-center gap-3">
+        <span>已答 <strong id="statAnswered" class="text-[#0F172A]">0</strong></span>
         <span>正确 <strong id="statCorrect" class="text-emerald-600">0</strong></span>
         <span>正确率 <strong id="statAccuracy" class="text-[#1E3A5F]">0%</strong></span>
       </div>
     </div>
 
     <!-- Progress Bar -->
-    <div class="h-1 bg-slate-100 w-full">
+    <div class="h-1 bg-[#D8E1EB] w-full">
       <div id="progressBar" class="h-full bg-[#1E3A5F] transition-all duration-300" style="width: 0%"></div>
     </div>
   </header>
@@ -88,24 +91,24 @@
   <!-- Main Content -->
   <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-5 flex flex-col gap-4">
     <!-- Chapter Scope Panel -->
-    <section id="scopePanel" class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm animate-fade-slide">
+    <section id="scopePanel" class="bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] p-4 shadow-sm animate-fade-slide">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 class="text-sm font-semibold text-slate-800">做题范围（按章节勾选）</h2>
+        <h2 class="text-sm font-semibold text-[#1E293B]">做题范围（按章节勾选）</h2>
         <div class="flex flex-wrap items-center gap-1.5">
-          <button type="button" id="btnScopeAll" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">全选</button>
-          <button type="button" id="btnScopeVat" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">仅增值税</button>
-          <button type="button" id="btnScopeCons" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">仅消费税</button>
-          <button type="button" id="btnScopeNone" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-500 font-medium transition">清空</button>
+          <button type="button" id="btnScopeAll" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-[#334155] font-medium transition">全选</button>
+          <button type="button" id="btnScopeVat" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-[#334155] font-medium transition">仅增值税</button>
+          <button type="button" id="btnScopeCons" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-[#334155] font-medium transition">仅消费税</button>
+          <button type="button" id="btnScopeNone" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-[#64748B] font-medium transition">清空</button>
         </div>
       </div>
       <div id="chapterGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
     </section>
 
     <!-- Collapsible Question Grid -->
-    <section id="questionCardPanel" class="hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-sm animate-fade-slide">
+    <section id="questionCardPanel" class="hidden bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] p-4 shadow-sm animate-fade-slide">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-semibold text-slate-800">答题卡（点击题号跳转）</h2>
-        <div class="flex items-center gap-3 text-xs text-slate-500">
+        <h2 class="text-sm font-semibold text-[#1E293B]">答题卡（点击题号跳转）</h2>
+        <div class="flex items-center gap-3 text-xs text-[#64748B]">
           <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>正确</span>
           <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>错误</span>
           <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span>未答</span>
@@ -114,15 +117,43 @@
       <div id="questionGrid" class="grid grid-cols-7 sm:grid-cols-11 gap-2 max-h-60 overflow-y-auto p-0.5"></div>
     </section>
 
+    <!-- Exam Mode Banner -->
+    <section id="examBanner" class="hidden bg-[#F6F8FB] rounded-2xl border border-[#1E3A5F]/30 p-4 shadow-sm animate-fade-slide flex flex-col gap-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-[#1E3A5F] text-white">模拟考试</span>
+          <span id="examBannerTitle" class="text-sm font-semibold text-[#0F172A]">已答 0 / 20 题（交卷后统一查看答案与解析）</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnExamSubmit" type="button" class="px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
+            交卷查看复盘
+          </button>
+          <button id="btnExamRestart" type="button" class="hidden px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
+            再考一组(20题)
+          </button>
+          <button id="btnExamExit" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#334155] hover:bg-[#E2E9F2] transition">
+            退出考试
+          </button>
+        </div>
+      </div>
+      <div id="examReviewBar" class="hidden pt-2 border-t border-[#DCE4EE] flex flex-wrap items-center justify-between gap-2">
+        <div id="examScoreText" class="text-xs sm:text-sm text-[#334155]"></div>
+        <div class="flex items-center gap-1.5">
+          <button id="btnReviewAll" type="button" class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1E3A5F] text-white transition">全部</button>
+          <button id="btnReviewWrong" type="button" class="px-2.5 py-1 text-xs font-medium rounded-md bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">只看错题</button>
+        </div>
+      </div>
+    </section>
+
     <!-- Quiz Card -->
-    <section id="quizContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-7 flex flex-col gap-5">
+    <section id="quizContainer" class="bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] shadow-sm p-5 sm:p-7 flex flex-col gap-5">
       <!-- Empty State -->
       <div id="emptyState" class="hidden py-10 text-center flex flex-col items-center gap-3">
-        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-[#64748B] flex items-center justify-center">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <p id="emptyTitle" class="text-base font-semibold text-slate-800">当前筛选下没有题目</p>
-        <p id="emptyDesc" class="text-sm text-slate-500">请调整章节范围或切换题型。</p>
+        <p id="emptyTitle" class="text-base font-semibold text-[#1E293B]">当前筛选下没有题目</p>
+        <p id="emptyDesc" class="text-sm text-[#64748B]">请调整章节范围或切换题型。</p>
         <button id="btnResetFilters" type="button" class="mt-1 px-4 py-2 text-sm font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
           查看全部题目
         </button>
@@ -132,13 +163,13 @@
       <div id="questionView" class="flex flex-col gap-5">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2">
-            <span id="qChapterBadge" class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700"></span>
+            <span id="qChapterBadge" class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-[#334155]"></span>
             <span id="qTypeBadge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-50 text-[#1E3A5F]">单选题</span>
-            <span id="qProgressText" class="text-sm font-medium text-slate-500">第 1 / 194 题</span>
+            <span id="qProgressText" class="text-sm font-medium text-[#64748B]">第 1 / 194 题</span>
           </div>
           <div class="flex items-center gap-2">
-            <span id="qOrigNum" class="text-xs text-slate-400">原题号 #1</span>
-            <button id="btnFavToggle" type="button" class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition flex items-center gap-1">
+            <span id="qOrigNum" class="text-xs text-[#94A3B8]">原题号 #1</span>
+            <button id="btnFavToggle" type="button" class="px-2.5 py-1 rounded-lg border border-[#D4DEE8] text-xs font-medium text-[#475569] hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition flex items-center gap-1">
               <span id="favStarIcon">☆</span>
               <span id="favBtnText">收藏</span>
             </button>
@@ -148,7 +179,7 @@
           </div>
         </div>
 
-        <h2 id="qStem" class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed whitespace-pre-line"></h2>
+        <h2 id="qStem" class="text-base sm:text-lg font-semibold text-[#0F172A] leading-relaxed whitespace-pre-line"></h2>
 
         <!-- Standard Options (Single / Judge / Multi) -->
         <div id="optionsContainer" class="flex flex-col gap-2.5"></div>
@@ -158,7 +189,7 @@
           <button id="btnSubmitMulti" type="button" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#1E3A5F] text-white font-medium text-sm hover:bg-[#162d4a] disabled:opacity-40 disabled:cursor-not-allowed transition">
             确认提交答案
           </button>
-          <span class="ml-0 sm:ml-3 mt-2 sm:mt-0 block sm:inline-block text-xs text-slate-400">多选题可勾选多个选项后点击提交</span>
+          <span class="ml-0 sm:ml-3 mt-2 sm:mt-0 block sm:inline-block text-xs text-[#94A3B8]">多选题可勾选多个选项后点击提交</span>
         </div>
 
         <!-- Reading Comprehension Sub-Questions -->
@@ -180,12 +211,12 @@
         </div>
 
         <!-- Bottom Navigation -->
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-          <button id="btnPrev" type="button" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+        <div class="pt-3 border-t border-[#DCE4EE] flex items-center justify-between gap-3">
+          <button id="btnPrev" type="button" class="px-4 py-2 rounded-xl border border-[#D4DEE8] text-sm font-medium text-[#334155] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
             ← 上一题
           </button>
-          <span class="hidden sm:inline text-xs text-slate-400">快捷键：A-E / 1-5 选答案 · ←/→ 切题</span>
-          <button id="btnNext" type="button" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
+          <span class="hidden sm:inline text-xs text-[#94A3B8]">快捷键：A-E / 1-5 选答案 · ←/→ 切题</span>
+          <button id="btnNext" type="button" class="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-medium hover:bg-[#162d4a] disabled:opacity-40 disabled:cursor-not-allowed transition">
             下一题 →
           </button>
         </div>
@@ -195,24 +226,24 @@
 
   <!-- Import Modal -->
   <div id="importModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-5 sm:p-6 flex flex-col gap-4 animate-fade-slide">
+    <div class="bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] shadow-xl max-w-lg w-full p-5 sm:p-6 flex flex-col gap-4 animate-fade-slide">
       <div class="flex items-center justify-between">
-        <h2 class="text-base sm:text-lg font-bold text-slate-900">导入新题库（自动去重）</h2>
-        <button id="btnCloseImport" type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">✕</button>
+        <h2 class="text-base sm:text-lg font-bold text-[#0F172A]">导入新题库（自动去重）</h2>
+        <button id="btnCloseImport" type="button" class="w-8 h-8 rounded-lg text-[#94A3B8] hover:text-[#334155] hover:bg-slate-100 flex items-center justify-center transition">✕</button>
       </div>
-      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+      <p class="text-xs sm:text-sm text-[#475569] leading-relaxed">
         可直接选择学习通导出的<strong>作业详情 .html 文件</strong>（支持多选）或之前导出的 <strong>.json 备份文件</strong>。系统会自动识别章节与题型、剔除重复题目，并保存在当前浏览器中。
       </p>
-      <label class="border-2 border-dashed border-slate-300 hover:border-[#1E3A5F] rounded-xl p-5 text-center cursor-pointer bg-slate-50/70 hover:bg-blue-50/30 transition flex flex-col items-center gap-2">
+      <label class="border-2 border-dashed border-slate-300 hover:border-[#1E3A5F] rounded-xl p-5 text-center cursor-pointer bg-[#EEF3F8] hover:bg-blue-50/30 transition flex flex-col items-center gap-2">
         <svg class="w-7 h-7 text-[#1E3A5F]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-        <span class="text-sm font-medium text-slate-700">点击选择 .html 或 .json 文件</span>
-        <span class="text-xs text-slate-400">支持一次选择多个章节文件</span>
+        <span class="text-sm font-medium text-[#334155]">点击选择 .html 或 .json 文件</span>
+        <span class="text-xs text-[#94A3B8]">支持一次选择多个章节文件</span>
         <input id="importFileInput" type="file" accept=".html,.htm,.json" multiple class="hidden" />
       </label>
-      <div id="importStatus" class="hidden text-xs sm:text-sm rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-700"></div>
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+      <div id="importStatus" class="hidden text-xs sm:text-sm rounded-xl px-3.5 py-2.5 bg-slate-100 text-[#334155]"></div>
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#DCE4EE]">
         <div class="flex items-center gap-2">
-          <button id="btnExportJson" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition">
+          <button id="btnExportJson" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#D4DEE8] text-[#334155] hover:bg-slate-50 transition">
             导出完整 JSON
           </button>
           <button id="btnClearCustom" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
@@ -228,16 +259,16 @@
 
   <!-- Sync Modal -->
   <div id="syncModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-5 sm:p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto animate-fade-slide">
+    <div class="bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] shadow-xl max-w-lg w-full p-5 sm:p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto animate-fade-slide">
       <div class="flex items-center justify-between">
-        <h2 class="text-base sm:text-lg font-bold text-slate-900">做题记录与多端同步</h2>
-        <button id="btnCloseSync" type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">✕</button>
+        <h2 class="text-base sm:text-lg font-bold text-[#0F172A]">做题记录与多端同步</h2>
+        <button id="btnCloseSync" type="button" class="w-8 h-8 rounded-lg text-[#94A3B8] hover:text-[#334155] hover:bg-slate-100 flex items-center justify-center transition">✕</button>
       </div>
 
       <!-- Local Progress Summary -->
-      <div class="rounded-xl bg-slate-50 border border-slate-200 p-3.5 flex flex-wrap items-center justify-between gap-2">
-        <div class="text-xs sm:text-sm text-slate-700">
-          本地已答 <strong id="syncAnsweredCount" class="text-slate-900">0</strong> 题 · 收藏 <strong id="syncFavCount" class="text-amber-600">0</strong> 题 · 错题 <strong id="syncWrongCount" class="text-rose-600">0</strong> 题
+      <div class="rounded-xl bg-[#EEF3F8] border border-[#D4DEE8] p-3.5 flex flex-wrap items-center justify-between gap-2">
+        <div class="text-xs sm:text-sm text-[#334155]">
+          本地已答 <strong id="syncAnsweredCount" class="text-[#0F172A]">0</strong> 题 · 收藏 <strong id="syncFavCount" class="text-amber-600">0</strong> 题 · 错题 <strong id="syncWrongCount" class="text-rose-600">0</strong> 题
         </div>
         <button id="btnResetProgress" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
           清空本地做题进度
@@ -245,49 +276,49 @@
       </div>
 
       <!-- Quick Code Sync -->
-      <div class="flex flex-col gap-2 pt-1 border-t border-slate-100">
-        <h3 class="text-xs sm:text-sm font-semibold text-slate-800">方式一：同步口令（合并收藏与错题）</h3>
+      <div class="flex flex-col gap-2 pt-1 border-t border-[#DCE4EE]">
+        <h3 class="text-xs sm:text-sm font-semibold text-[#1E293B]">方式一：同步口令（合并收藏与错题）</h3>
         <div class="flex flex-wrap items-center gap-2">
           <button id="btnCopySyncCode" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
             复制当前同步码
           </button>
-          <span class="text-xs text-slate-400">仅同步收藏夹与错题本，导入时自动叠加合并</span>
+          <span class="text-xs text-[#94A3B8]">仅同步收藏夹与错题本，导入时自动叠加合并</span>
         </div>
         <div class="flex gap-2 mt-1">
-          <input id="syncCodeInput" type="text" placeholder="在此粘贴另一台设备复制的同步码..." class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1E3A5F]" />
-          <button id="btnApplySyncCode" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 shrink-0 transition">
+          <input id="syncCodeInput" type="text" placeholder="在此粘贴另一台设备复制的同步码..." class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] focus:outline-none focus:border-[#1E3A5F]" />
+          <button id="btnApplySyncCode" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] shrink-0 transition">
             合并导入
           </button>
         </div>
       </div>
 
       <!-- GitHub Gist Cloud Sync -->
-      <div class="flex flex-col gap-2 pt-3 border-t border-slate-100">
-        <h3 class="text-xs sm:text-sm font-semibold text-slate-800">方式二：GitHub 云端双向合并同步（手机与电脑互通）</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">
+      <div class="flex flex-col gap-2 pt-3 border-t border-[#DCE4EE]">
+        <h3 class="text-xs sm:text-sm font-semibold text-[#1E293B]">方式二：GitHub 云端双向合并同步（手机与电脑互通）</h3>
+        <p class="text-xs text-[#64748B] leading-relaxed">
           仅同步<strong>收藏夹</strong>与<strong>错题本</strong>，不覆盖各自设备的做题进度。每次同步都会把手机与电脑的记录<strong>叠加合并（取并集）</strong>，互不覆盖。
         </p>
-        <input id="ghTokenInput" type="password" placeholder="GitHub Token (ghp_...)" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1E3A5F]" />
-        <input id="ghGistIdInput" type="text" placeholder="云端存档 ID（首次同步留空自动生成）" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1E3A5F]" />
-        <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer select-none">
+        <input id="ghTokenInput" type="password" placeholder="GitHub Token (ghp_...)" class="w-full px-3 py-1.5 text-xs rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] focus:outline-none focus:border-[#1E3A5F]" />
+        <input id="ghGistIdInput" type="text" placeholder="云端存档 ID（首次同步留空自动生成）" class="w-full px-3 py-1.5 text-xs rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] focus:outline-none focus:border-[#1E3A5F]" />
+        <label class="flex items-center gap-2 text-xs text-[#334155] cursor-pointer select-none">
           <input id="ghAutoSyncCheck" type="checkbox" class="rounded border-slate-300 text-[#1E3A5F]" />
           <span>每次收藏或答错后自动合并同步到云端</span>
         </label>
         <div class="flex flex-wrap items-center gap-2 mt-1">
-          <button id="btnGhPush" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition">
+          <button id="btnGhPush" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
             立即双向合并同步
           </button>
-          <button id="btnGhPull" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+          <button id="btnGhPull" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] transition">
             仅从云端合并到本地
           </button>
         </div>
-        <div id="syncStatusMsg" class="hidden text-xs rounded-lg px-3 py-2 bg-slate-100 text-slate-700"></div>
+        <div id="syncStatusMsg" class="hidden text-xs rounded-lg px-3 py-2 bg-slate-100 text-[#334155]"></div>
       </div>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toastBanner" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs sm:text-sm font-medium shadow-lg"></div>
+  <div id="toastBanner" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#1E3A5F] text-white text-xs sm:text-sm font-medium shadow-lg"></div>
 
   <script>
     const BASE_CHAPTERS = [{"id": "ch1", "name": "第一章 导论", "count": 30}, {"id": "ch2_1", "name": "第二章 增值税（一）", "count": 31}, {"id": "ch2_2", "name": "第二章 增值税（二）", "count": 42}, {"id": "ch2_3", "name": "第二章 增值税（三）", "count": 40}, {"id": "ch3_1", "name": "第三章 消费税（一）", "count": 31}, {"id": "ch3_2", "name": "第三章 消费税（二）", "count": 20}, {"id": "ch_test", "name": "课堂测试补充（增值税）", "count": 5}];
@@ -307,7 +338,13 @@
       favorites: new Set(),
       wrongBook: new Set(),
       showScope: true,
-      showCard: false
+      showCard: false,
+      examMode: false,
+      examSubmitted: false,
+      examReviewFilter: 'all',
+      examPool: [],
+      examAnswers: {},
+      examSubAnswers: {}
     };
 
     function shuffleArray(arr) {
@@ -319,9 +356,28 @@
       return copy;
     }
 
-    function isQuestionSubmitted(q) {
+    function getActiveAnswersMap() {
+      return state.examMode ? state.examAnswers : state.userAnswers;
+    }
+
+    function getActiveSubAnswersMap() {
+      return state.examMode ? state.examSubAnswers : state.subAnswers;
+    }
+
+    function isExamQuestionAnswered(q) {
       if (q.type === '阅读理解') {
-        const sa = state.subAnswers[q.id] || {};
+        const sa = state.examSubAnswers[q.id] || {};
+        return Object.keys(sa).length === q.subQuestions.length;
+      }
+      return (state.examAnswers[q.id] || []).length > 0;
+    }
+
+    function isQuestionSubmitted(q) {
+      if (state.examMode) {
+        return state.examSubmitted;
+      }
+      if (q.type === '阅读理解') {
+        const sa = getActiveSubAnswersMap()[q.id] || {};
         return Object.keys(sa).length === q.subQuestions.length;
       }
       return !!state.submitted[q.id];
@@ -329,11 +385,11 @@
 
     function isQuestionCorrect(q) {
       if (q.type === '阅读理解') {
-        const sa = state.subAnswers[q.id] || {};
+        const sa = getActiveSubAnswersMap()[q.id] || {};
         if (Object.keys(sa).length !== q.subQuestions.length) return false;
         return q.subQuestions.every((sq, idx) => sa[idx] === sq.answer);
       }
-      const chosen = (state.userAnswers[q.id] || []).slice().sort().join('');
+      const chosen = (getActiveAnswersMap()[q.id] || []).slice().sort().join('');
       const target = q.answer.split('').sort().join('');
       return chosen === target;
     }
@@ -418,24 +474,86 @@
       }
     }
 
+    function getFilteredPool() {
+      const scoped = getScopedQuestions();
+      if (state.typeFilter === 'fav') {
+        return scoped.filter(q => state.favorites.has(q.id));
+      } else if (state.typeFilter === 'wrong') {
+        return scoped.filter(q => state.wrongBook.has(q.id));
+      } else if (state.typeFilter !== 'all') {
+        return scoped.filter(q => q.type === state.typeFilter);
+      }
+      return scoped;
+    }
+
     function buildDeck(resetProgress = false) {
+      if (state.examMode) {
+        if (state.examSubmitted && state.examReviewFilter === 'wrong') {
+          state.deck = state.examPool.filter(q => !isQuestionCorrect(q));
+        } else {
+          state.deck = [...state.examPool];
+        }
+        state.currentIndex = 0;
+        render();
+        return;
+      }
       if (resetProgress) {
         state.userAnswers = {};
         state.submitted = {};
         state.subAnswers = {};
       }
-      const scoped = getScopedQuestions();
-      let pool = scoped;
-      if (state.typeFilter === 'fav') {
-        pool = scoped.filter(q => state.favorites.has(q.id));
-      } else if (state.typeFilter === 'wrong') {
-        pool = scoped.filter(q => state.wrongBook.has(q.id));
-      } else if (state.typeFilter !== 'all') {
-        pool = scoped.filter(q => q.type === state.typeFilter);
-      }
-      state.deck = shuffleArray(pool);
+      state.deck = shuffleArray(getFilteredPool());
       state.currentIndex = 0;
       render();
+    }
+
+    function startExamMode() {
+      const pool = shuffleArray(getFilteredPool());
+      if (pool.length === 0) {
+        showToast('当前筛选范围内没有题目，请先选择章节或题型');
+        return;
+      }
+      state.examMode = true;
+      state.examSubmitted = false;
+      state.examReviewFilter = 'all';
+      state.examPool = pool.slice(0, 20);
+      state.examAnswers = {};
+      state.examSubAnswers = {};
+      state.showScope = false;
+      state.deck = [...state.examPool];
+      state.currentIndex = 0;
+      showToast(`已开启考试模式，随机抽取 ${state.examPool.length} 题`);
+      render();
+    }
+
+    function submitExamMode() {
+      if (!state.examMode || state.examSubmitted) return;
+      state.examSubmitted = true;
+      state.examReviewFilter = 'all';
+      let wrongAdded = false;
+      state.examPool.forEach(q => {
+        if (!isQuestionCorrect(q) && !state.wrongBook.has(q.id)) {
+          state.wrongBook.add(q.id);
+          wrongAdded = true;
+        }
+      });
+      if (wrongAdded) {
+        saveWrongBook();
+        maybeAutoSync();
+      }
+      state.deck = [...state.examPool];
+      state.currentIndex = 0;
+      render();
+    }
+
+    function exitExamMode() {
+      state.examMode = false;
+      state.examSubmitted = false;
+      state.examReviewFilter = 'all';
+      state.examPool = [];
+      state.examAnswers = {};
+      state.examSubAnswers = {};
+      buildDeck(false);
     }
 
     function toggleChapter(chId) {
@@ -454,7 +572,23 @@
 
     function selectOption(letter) {
       const q = state.deck[state.currentIndex];
-      if (!q || q.type === '阅读理解' || state.submitted[q.id]) return;
+      if (!q || q.type === '阅读理解') return;
+
+      if (state.examMode) {
+        if (state.examSubmitted) return;
+        if (q.type !== '多选题') {
+          state.examAnswers[q.id] = [letter];
+        } else {
+          const current = state.examAnswers[q.id] || [];
+          state.examAnswers[q.id] = current.includes(letter)
+            ? current.filter(l => l !== letter)
+            : [...current, letter];
+        }
+        render();
+        return;
+      }
+
+      if (state.submitted[q.id]) return;
 
       if (q.type !== '多选题') {
         state.userAnswers[q.id] = [letter];
@@ -475,6 +609,13 @@
     }
 
     function selectSubOption(qId, subIdx, letter) {
+      if (state.examMode) {
+        if (state.examSubmitted) return;
+        if (!state.examSubAnswers[qId]) state.examSubAnswers[qId] = {};
+        state.examSubAnswers[qId][subIdx] = letter;
+        render();
+        return;
+      }
       if (!state.subAnswers[qId]) state.subAnswers[qId] = {};
       if (state.subAnswers[qId][subIdx]) return; // already answered
       state.subAnswers[qId][subIdx] = letter;
@@ -489,6 +630,7 @@
     }
 
     function submitMulti() {
+      if (state.examMode) return;
       const q = state.deck[state.currentIndex];
       if (!q || q.type !== '多选题' || state.submitted[q.id]) return;
       const current = state.userAnswers[q.id] || [];
@@ -530,11 +672,11 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = active
-          ? 'px-3 py-2 rounded-xl border border-[#1E3A5F] bg-blue-50/70 text-[#1E3A5F] text-left flex items-center justify-between gap-2 transition'
-          : 'px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-left flex items-center justify-between gap-2 transition';
+          ? 'px-3 py-2 rounded-xl border border-[#1E3A5F] bg-[#E3ECF6] text-[#1E3A5F] text-left flex items-center justify-between gap-2 transition'
+          : 'px-3 py-2 rounded-xl border border-[#D4DEE8] bg-[#F7F9FC] text-[#475569] hover:bg-[#E9EFF6] text-left flex items-center justify-between gap-2 transition';
         btn.innerHTML = `
           <span class="text-xs sm:text-sm font-medium truncate">${ch.name}</span>
-          <span class="text-xs px-1.5 py-0.5 rounded-md ${active ? 'bg-[#1E3A5F] text-white' : 'bg-slate-100 text-slate-500'} shrink-0">${ch.count}题</span>
+          <span class="text-xs px-1.5 py-0.5 rounded-md ${active ? 'bg-[#1E3A5F] text-white' : 'bg-slate-100 text-[#64748B]'} shrink-0">${ch.count}题</span>
         `;
         btn.addEventListener('click', () => toggleChapter(ch.id));
         grid.appendChild(btn);
@@ -574,20 +716,77 @@
         } else if (active) {
           btn.className = 'type-btn px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1E3A5F] text-white transition';
         } else {
-          btn.className = 'type-btn px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+          btn.className = 'type-btn px-2.5 py-1 text-xs font-medium rounded-md bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition';
         }
       });
 
-      const answeredQs = scoped.filter(q => isQuestionSubmitted(q));
-      const correctQs = answeredQs.filter(q => isQuestionCorrect(q));
-      const accuracy = answeredQs.length > 0 ? Math.round((correctQs.length / answeredQs.length) * 100) : 0;
+      const statWrap = document.getElementById('statAnswered').parentElement.parentElement;
+      if (state.examMode && !state.examSubmitted) {
+        const doneCount = state.examPool.filter(q => isExamQuestionAnswered(q)).length;
+        statWrap.innerHTML = `<span>考试进度 <strong id="statAnswered" class="text-[#1E3A5F]">${doneCount} / ${state.examPool.length}</strong></span><span class="hidden" id="statCorrect">0</span><span class="hidden" id="statAccuracy">0%</span>`;
+        const pct = state.examPool.length > 0 ? (doneCount / state.examPool.length) * 100 : 0;
+        document.getElementById('progressBar').style.width = `${pct}%`;
+      } else if (state.examMode && state.examSubmitted) {
+        const correctQs = state.examPool.filter(q => isQuestionCorrect(q));
+        const accuracy = state.examPool.length > 0 ? Math.round((correctQs.length / state.examPool.length) * 100) : 0;
+        statWrap.innerHTML = `<span>已答 <strong id="statAnswered" class="text-[#0F172A]">${state.examPool.length}</strong></span><span>正确 <strong id="statCorrect" class="text-emerald-600">${correctQs.length}</strong></span><span>正确率 <strong id="statAccuracy" class="text-[#1E3A5F]">${accuracy}%</strong></span>`;
+        const pct = state.deck.length > 0 ? ((state.currentIndex + 1) / state.deck.length) * 100 : 0;
+        document.getElementById('progressBar').style.width = `${pct}%`;
+      } else {
+        const answeredQs = scoped.filter(q => isQuestionSubmitted(q));
+        const correctQs = answeredQs.filter(q => isQuestionCorrect(q));
+        const accuracy = answeredQs.length > 0 ? Math.round((correctQs.length / answeredQs.length) * 100) : 0;
+        statWrap.innerHTML = `<span>已答 <strong id="statAnswered" class="text-[#0F172A]">${answeredQs.length}</strong></span><span>正确 <strong id="statCorrect" class="text-emerald-600">${correctQs.length}</strong></span><span>正确率 <strong id="statAccuracy" class="text-[#1E3A5F]">${accuracy}%</strong></span>`;
+        const pct = state.deck.length > 0 ? ((state.currentIndex + 1) / state.deck.length) * 100 : 0;
+        document.getElementById('progressBar').style.width = `${pct}%`;
+      }
 
-      document.getElementById('statAnswered').textContent = answeredQs.length;
-      document.getElementById('statCorrect').textContent = correctQs.length;
-      document.getElementById('statAccuracy').textContent = `${accuracy}%`;
+      const examBtn = document.getElementById('btnExamMode');
+      if (examBtn) {
+        examBtn.textContent = state.examMode ? '退出考试' : '考试模式(20题)';
+      }
+      renderExamBanner();
+    }
 
-      const pct = state.deck.length > 0 ? ((state.currentIndex + 1) / state.deck.length) * 100 : 0;
-      document.getElementById('progressBar').style.width = `${pct}%`;
+    function renderExamBanner() {
+      const banner = document.getElementById('examBanner');
+      if (!banner) return;
+      banner.classList.toggle('hidden', !state.examMode);
+      if (!state.examMode) return;
+
+      const titleEl = document.getElementById('examBannerTitle');
+      const btnSubmit = document.getElementById('btnExamSubmit');
+      const btnRestart = document.getElementById('btnExamRestart');
+      const reviewBar = document.getElementById('examReviewBar');
+
+      if (!state.examSubmitted) {
+        const doneCount = state.examPool.filter(q => isExamQuestionAnswered(q)).length;
+        titleEl.textContent = `答题进度：已答 ${doneCount} / ${state.examPool.length} 题（交卷后统一核对答案并复盘）`;
+        btnSubmit.classList.remove('hidden');
+        btnRestart.classList.add('hidden');
+        reviewBar.classList.add('hidden');
+      } else {
+        const correctCount = state.examPool.filter(q => isQuestionCorrect(q)).length;
+        const wrongCount = state.examPool.length - correctCount;
+        const acc = state.examPool.length > 0 ? Math.round((correctCount / state.examPool.length) * 100) : 0;
+        titleEl.textContent = `考试复盘 · 共 ${state.examPool.length} 题`;
+        btnSubmit.classList.add('hidden');
+        btnRestart.classList.remove('hidden');
+        reviewBar.classList.remove('hidden');
+        document.getElementById('examScoreText').innerHTML =
+          `答对 <strong class="text-emerald-700">${correctCount}</strong> 题 · 答错/未答 <strong class="text-rose-700">${wrongCount}</strong> 题 · 正确率 <strong class="text-[#1E3A5F]">${acc}%</strong>（错题已自动存入错题本）`;
+
+        const btnAll = document.getElementById('btnReviewAll');
+        const btnWrong = document.getElementById('btnReviewWrong');
+        btnAll.textContent = `全部 (${state.examPool.length})`;
+        btnWrong.textContent = `只看错题 (${wrongCount})`;
+        btnAll.className = state.examReviewFilter === 'all'
+          ? 'px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1E3A5F] text-white transition'
+          : 'px-2.5 py-1 text-xs font-medium rounded-md bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition';
+        btnWrong.className = state.examReviewFilter === 'wrong'
+          ? 'px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1E3A5F] text-white transition'
+          : 'px-2.5 py-1 text-xs font-medium rounded-md bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition';
+      }
     }
 
     function renderGrid() {
@@ -606,12 +805,16 @@
         const isRight = isSub && isQuestionCorrect(q);
 
         let cls = 'h-9 rounded-lg text-xs font-semibold border transition flex items-center justify-center ';
-        if (isSub) {
+        if (state.examMode && !state.examSubmitted) {
+          cls += isExamQuestionAnswered(q)
+            ? 'bg-[#E3ECF6] text-[#1E3A5F] border-[#93AECB] '
+            : 'bg-[#F7F9FC] text-[#334155] border-[#D4DEE8] hover:bg-[#E6ECF2] ';
+        } else if (isSub) {
           cls += isRight
             ? 'bg-emerald-50 text-emerald-700 border-emerald-300 '
             : 'bg-rose-50 text-rose-700 border-rose-300 ';
         } else {
-          cls += 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 ';
+          cls += 'bg-[#F7F9FC] text-[#334155] border-[#D4DEE8] hover:bg-[#E6ECF2] ';
         }
         if (isCurrent) {
           cls += 'ring-2 ring-[#1E3A5F] ring-offset-1 ';
@@ -637,6 +840,10 @@
           document.getElementById('emptyTitle').textContent = '当前所选章节暂无收藏题目';
           document.getElementById('emptyDesc').textContent = '做题时点击题目右上角“☆ 收藏”即可加入收藏夹。';
           document.getElementById('btnResetFilters').textContent = '查看全部题目';
+        } else if (state.examMode && state.examSubmitted && state.examReviewFilter === 'wrong') {
+          document.getElementById('emptyTitle').textContent = '本次考试全部答对！';
+          document.getElementById('emptyDesc').textContent = '20 道题没有错题，可以点击“全部”复盘或“再考一组”。';
+          document.getElementById('btnResetFilters').textContent = '查看全部 20 题';
         } else if (state.typeFilter === 'wrong') {
           document.getElementById('emptyTitle').textContent = '当前所选章节暂无错题';
           document.getElementById('emptyDesc').textContent = '做题时答错的题目会自动收入错题本，方便随时重做。';
@@ -681,17 +888,17 @@
         subEl.classList.remove('hidden');
         subEl.innerHTML = '';
 
-        const sa = state.subAnswers[q.id] || {};
+        const sa = getActiveSubAnswersMap()[q.id] || {};
         q.subQuestions.forEach((sq, sIdx) => {
           const chosenLetter = sa[sIdx];
-          const isSubDone = !!chosenLetter;
+          const isSubDone = state.examMode ? state.examSubmitted : !!chosenLetter;
           const isSubRight = isSubDone && chosenLetter === sq.answer;
 
           const card = document.createElement('div');
-          card.className = 'rounded-xl border border-slate-200 bg-slate-50/60 p-4 flex flex-col gap-3';
+          card.className = 'rounded-xl border border-[#D4DEE8] bg-[#EEF3F8] p-4 flex flex-col gap-3';
 
           const subTitle = document.createElement('div');
-          subTitle.className = 'text-sm sm:text-base font-medium text-slate-900 leading-relaxed whitespace-pre-line';
+          subTitle.className = 'text-sm sm:text-base font-medium text-[#0F172A] leading-relaxed whitespace-pre-line';
           subTitle.innerHTML = `<span class="font-bold text-[#1E3A5F] mr-1">${sq.subNum}</span> ${sq.stem}`;
           card.appendChild(subTitle);
 
@@ -707,8 +914,13 @@
             let tag = '';
 
             if (!isSubDone) {
-              wCls += 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50';
-              bCls += 'bg-slate-100 text-slate-600';
+              if (opt.letter === chosenLetter) {
+                wCls += 'border-[#1E3A5F] bg-[#E3ECF6] text-[#0F172A]';
+                bCls += 'bg-[#1E3A5F] text-white';
+              } else {
+                wCls += 'border-[#D4DEE8] bg-[#F8FAFC] text-[#0F172A] hover:border-[#93AECB] hover:bg-[#E9EFF6]';
+                bCls += 'bg-slate-100 text-[#475569]';
+              }
             } else {
               const isCorr = opt.letter === sq.answer;
               const isSel = opt.letter === chosenLetter;
@@ -725,8 +937,8 @@
                 bCls += 'bg-rose-600 text-white';
                 tag = '<span class="ml-auto text-xs font-semibold text-rose-700 shrink-0 pl-2">✗ 错选</span>';
               } else {
-                wCls += 'border-slate-200 bg-white/50 text-slate-400';
-                bCls += 'bg-slate-100 text-slate-400';
+                wCls += 'border-[#D4DEE8] bg-white/50 text-[#94A3B8]';
+                bCls += 'bg-slate-100 text-[#94A3B8]';
               }
             }
 
@@ -752,7 +964,7 @@
         // Show shared analysis when all sub-questions are answered
         const allDone = Object.keys(sa).length === q.subQuestions.length;
         if (allDone && q.analysis) {
-          fbBox.className = 'rounded-xl p-4 border bg-slate-50 border-slate-200 text-slate-800 animate-fade-slide';
+          fbBox.className = 'rounded-xl p-4 border bg-slate-50 border-[#D4DEE8] text-[#1E293B] animate-fade-slide';
           document.getElementById('feedbackHeader').classList.add('hidden');
           document.getElementById('feedbackUserAns').classList.add('hidden');
           document.getElementById('feedbackAnalysis').textContent = q.analysis;
@@ -765,8 +977,8 @@
         subEl.classList.add('hidden');
         optsEl.innerHTML = '';
 
-        const chosen = state.userAnswers[q.id] || [];
-        const isSub = !!state.submitted[q.id];
+        const chosen = getActiveAnswersMap()[q.id] || [];
+        const isSub = state.examMode ? state.examSubmitted : !!state.submitted[q.id];
         const correctSet = new Set(q.answer.split(''));
 
         q.options.forEach(opt => {
@@ -783,11 +995,11 @@
 
           if (!isSub) {
             if (isSelected) {
-              wrapperCls += 'border-[#1E3A5F] bg-blue-50/70 text-slate-900';
+              wrapperCls += 'border-[#1E3A5F] bg-[#E3ECF6] text-[#0F172A]';
               badgeCls += 'bg-[#1E3A5F] text-white';
             } else {
-              wrapperCls += 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50';
-              badgeCls += 'bg-slate-100 text-slate-600';
+              wrapperCls += 'border-[#D4DEE8] bg-[#F8FAFC] text-[#0F172A] hover:border-[#93AECB] hover:bg-[#E9EFF6]';
+              badgeCls += 'bg-slate-100 text-[#475569]';
             }
           } else {
             if (isCorrectOpt && isSelected) {
@@ -803,8 +1015,8 @@
               badgeCls += 'bg-rose-600 text-white';
               statusTag = '<span class="ml-auto text-xs font-semibold text-rose-700 shrink-0 pl-2">✗ 错选</span>';
             } else {
-              wrapperCls += 'border-slate-200 bg-slate-50/50 text-slate-400';
-              badgeCls += 'bg-slate-100 text-slate-400';
+              wrapperCls += 'border-[#D4DEE8] bg-[#F0F4F8] text-[#94A3B8]';
+              badgeCls += 'bg-slate-100 text-[#94A3B8]';
             }
           }
 
@@ -820,7 +1032,7 @@
 
         // Multi submit button
         const btnSubmitMulti = document.getElementById('btnSubmitMulti');
-        if (q.type === '多选题' && !isSub) {
+        if (q.type === '多选题' && !isSub && !state.examMode) {
           multiWrap.classList.remove('hidden');
           btnSubmitMulti.disabled = chosen.length === 0;
         } else {
@@ -851,7 +1063,7 @@
             icon.textContent = '✗';
             title.textContent = '回答错误';
             corrEl.textContent = `正确答案：${formatAnswerDisplay(q, q.answer)}`;
-            userEl.textContent = `你的选择：${formatAnswerDisplay(q, chosen.slice().sort().join(''))}`;
+            userEl.textContent = chosen.length > 0 ? `你的选择：${formatAnswerDisplay(q, chosen.slice().sort().join(''))}` : '你的选择：未作答';
             userEl.classList.remove('hidden');
           }
 
@@ -889,6 +1101,21 @@
       renderGrid();
     });
     document.getElementById('btnShuffle').addEventListener('click', () => { buildDeck(false); showToast('已重新乱序排列'); });
+    document.getElementById('btnExamMode').addEventListener('click', () => {
+      if (state.examMode) exitExamMode();
+      else startExamMode();
+    });
+    document.getElementById('btnExamSubmit').addEventListener('click', submitExamMode);
+    document.getElementById('btnExamRestart').addEventListener('click', startExamMode);
+    document.getElementById('btnExamExit').addEventListener('click', exitExamMode);
+    document.getElementById('btnReviewAll').addEventListener('click', () => {
+      state.examReviewFilter = 'all';
+      buildDeck(false);
+    });
+    document.getElementById('btnReviewWrong').addEventListener('click', () => {
+      state.examReviewFilter = 'wrong';
+      buildDeck(false);
+    });
 
     document.getElementById('btnScopeAll').addEventListener('click', () => setChapterScope(CHAPTERS.map(c => c.id)));
     document.getElementById('btnScopeVat').addEventListener('click', () => setChapterScope(['ch2_1', 'ch2_2', 'ch2_3', 'ch_test']));
@@ -896,6 +1123,11 @@
     document.getElementById('btnScopeNone').addEventListener('click', () => setChapterScope([]));
 
     document.getElementById('btnResetFilters').addEventListener('click', () => {
+      if (state.examMode && state.examSubmitted && state.examReviewFilter === 'wrong') {
+        state.examReviewFilter = 'all';
+        buildDeck(false);
+        return;
+      }
       if (state.selectedChapters.size === 0) {
         state.selectedChapters = new Set(CHAPTERS.map(c => c.id));
       }
@@ -1245,7 +1477,7 @@
         star.textContent = '★';
         txt.textContent = '已收藏';
       } else {
-        btn.className = 'px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition flex items-center gap-1';
+        btn.className = 'px-2.5 py-1 rounded-lg border border-[#D4DEE8] text-xs font-medium text-[#475569] hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition flex items-center gap-1';
         star.textContent = '☆';
         txt.textContent = '收藏';
       }
@@ -1337,7 +1569,7 @@
     function setSyncStatus(msg, isError = false) {
       const el = document.getElementById('syncStatusMsg');
       el.textContent = msg;
-      el.classList.remove('hidden', 'bg-slate-100', 'text-slate-700', 'bg-rose-50', 'text-rose-700', 'bg-emerald-50', 'text-emerald-700');
+      el.classList.remove('hidden', 'bg-slate-100', 'text-[#334155]', 'bg-rose-50', 'text-rose-700', 'bg-emerald-50', 'text-emerald-700');
       if (isError) el.classList.add('bg-rose-50', 'text-rose-700');
       else el.classList.add('bg-emerald-50', 'text-emerald-700');
     }
