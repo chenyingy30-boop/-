@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>税法题库 · 分章乱序交互刷题</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .option-btn {
+      transition: all 0.15s ease;
+    }
+    .option-btn:not(:disabled):hover {
+      transform: translateY(-1px);
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-slide {
+      animation: fadeSlide 0.2s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- Top Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="max-w-3xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-lg bg-[#1E3A5F] text-white flex items-center justify-center font-bold text-sm shrink-0">
+          税法
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 truncate">税法课程 · 分章乱序刷题</h1>
+          <p id="scopeSummary" class="text-xs text-slate-500 truncate">已选 6 个章节 · 共 194 题</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button id="btnOpenSync" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+          同步记录
+        </button>
+        <button id="btnOpenImport" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+          导入新题
+        </button>
+        <button id="btnToggleScope" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+          选章节
+        </button>
+        <button id="btnToggleCard" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+          答题卡
+        </button>
+        <button id="btnShuffle" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          重新乱序
+        </button>
+      </div>
+    </div>
+
+    <!-- Type Filter & Stats Bar -->
+    <div class="max-w-3xl mx-auto px-4 pb-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1.5" id="typeFilterGroup">
+        <button type="button" data-type="all" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">全部</button>
+        <button type="button" data-type="单选题" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">单选题</button>
+        <button type="button" data-type="判断题" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">判断题</button>
+        <button type="button" data-type="多选题" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">多选题</button>
+        <button type="button" data-type="阅读理解" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">阅读理解</button>
+        <button type="button" data-type="fav" id="btnTypeFav" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">收藏夹 (0)</button>
+        <button type="button" data-type="wrong" id="btnTypeWrong" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">错题本 (0)</button>
+      </div>
+
+      <div class="text-xs text-slate-600 flex items-center gap-3">
+        <span>已答 <strong id="statAnswered" class="text-slate-900">0</strong></span>
+        <span>正确 <strong id="statCorrect" class="text-emerald-600">0</strong></span>
+        <span>正确率 <strong id="statAccuracy" class="text-[#1E3A5F]">0%</strong></span>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="h-1 bg-slate-100 w-full">
+      <div id="progressBar" class="h-full bg-[#1E3A5F] transition-all duration-300" style="width: 0%"></div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-5 flex flex-col gap-4">
+    <!-- Chapter Scope Panel -->
+    <section id="scopePanel" class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm animate-fade-slide">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-sm font-semibold text-slate-800">做题范围（按章节勾选）</h2>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" id="btnScopeAll" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">全选</button>
+          <button type="button" id="btnScopeVat" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">仅增值税</button>
+          <button type="button" id="btnScopeCons" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">仅消费税</button>
+          <button type="button" id="btnScopeNone" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-500 font-medium transition">清空</button>
+        </div>
+      </div>
+      <div id="chapterGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+    </section>
+
+    <!-- Collapsible Question Grid -->
+    <section id="questionCardPanel" class="hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-sm animate-fade-slide">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-slate-800">答题卡（点击题号跳转）</h2>
+        <div class="flex items-center gap-3 text-xs text-slate-500">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>正确</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>错误</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span>未答</span>
+        </div>
+      </div>
+      <div id="questionGrid" class="grid grid-cols-7 sm:grid-cols-11 gap-2 max-h-60 overflow-y-auto p-0.5"></div>
+    </section>
+
+    <!-- Quiz Card -->
+    <section id="quizContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-7 flex flex-col gap-5">
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden py-10 text-center flex flex-col items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <p id="emptyTitle" class="text-base font-semibold text-slate-800">当前筛选下没有题目</p>
+        <p id="emptyDesc" class="text-sm text-slate-500">请调整章节范围或切换题型。</p>
+        <button id="btnResetFilters" type="button" class="mt-1 px-4 py-2 text-sm font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
+          查看全部题目
+        </button>
+      </div>
+
+      <!-- Active Question View -->
+      <div id="questionView" class="flex flex-col gap-5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="qChapterBadge" class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700"></span>
+            <span id="qTypeBadge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-50 text-[#1E3A5F]">单选题</span>
+            <span id="qProgressText" class="text-sm font-medium text-slate-500">第 1 / 194 题</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="qOrigNum" class="text-xs text-slate-400">原题号 #1</span>
+            <button id="btnFavToggle" type="button" class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition flex items-center gap-1">
+              <span id="favStarIcon">☆</span>
+              <span id="favBtnText">收藏</span>
+            </button>
+            <button id="btnWrongRemove" type="button" class="hidden px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 text-xs font-medium text-rose-700 hover:bg-rose-100 transition">
+              移出错题
+            </button>
+          </div>
+        </div>
+
+        <h2 id="qStem" class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed whitespace-pre-line"></h2>
+
+        <!-- Standard Options (Single / Judge / Multi) -->
+        <div id="optionsContainer" class="flex flex-col gap-2.5"></div>
+
+        <!-- Multi-choice Submit Button -->
+        <div id="multiSubmitWrap" class="hidden pt-1">
+          <button id="btnSubmitMulti" type="button" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#1E3A5F] text-white font-medium text-sm hover:bg-[#162d4a] disabled:opacity-40 disabled:cursor-not-allowed transition">
+            确认提交答案
+          </button>
+          <span class="ml-0 sm:ml-3 mt-2 sm:mt-0 block sm:inline-block text-xs text-slate-400">多选题可勾选多个选项后点击提交</span>
+        </div>
+
+        <!-- Reading Comprehension Sub-Questions -->
+        <div id="subQuestionsContainer" class="hidden flex flex-col gap-5"></div>
+
+        <!-- Instant Feedback Box (for Single / Judge / Multi, or Shared Analysis for Reading) -->
+        <div id="feedbackBox" class="hidden rounded-xl p-4 border animate-fade-slide">
+          <div id="feedbackHeader" class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+            <div class="flex items-center gap-2">
+              <span id="feedbackIcon" class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"></span>
+              <span id="feedbackTitle" class="font-bold text-sm sm:text-base"></span>
+            </div>
+            <span id="feedbackCorrectAns" class="text-sm font-semibold"></span>
+          </div>
+          <p id="feedbackUserAns" class="text-xs sm:text-sm mb-2 hidden"></p>
+          <div id="feedbackAnalysisWrap" class="hidden mt-2 pt-2.5 border-t border-black/10 text-sm leading-relaxed whitespace-pre-line">
+            <span class="font-semibold">答案解析：</span><span id="feedbackAnalysis"></span>
+          </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+          <button id="btnPrev" type="button" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+            ← 上一题
+          </button>
+          <span class="hidden sm:inline text-xs text-slate-400">快捷键：A-E / 1-5 选答案 · ←/→ 切题</span>
+          <button id="btnNext" type="button" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
+            下一题 →
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Import Modal -->
+  <div id="importModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-5 sm:p-6 flex flex-col gap-4 animate-fade-slide">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base sm:text-lg font-bold text-slate-900">导入新题库（自动去重）</h2>
+        <button id="btnCloseImport" type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">✕</button>
+      </div>
+      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+        可直接选择学习通导出的<strong>作业详情 .html 文件</strong>（支持多选）或之前导出的 <strong>.json 备份文件</strong>。系统会自动识别章节与题型、剔除重复题目，并保存在当前浏览器中。
+      </p>
+      <label class="border-2 border-dashed border-slate-300 hover:border-[#1E3A5F] rounded-xl p-5 text-center cursor-pointer bg-slate-50/70 hover:bg-blue-50/30 transition flex flex-col items-center gap-2">
+        <svg class="w-7 h-7 text-[#1E3A5F]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <span class="text-sm font-medium text-slate-700">点击选择 .html 或 .json 文件</span>
+        <span class="text-xs text-slate-400">支持一次选择多个章节文件</span>
+        <input id="importFileInput" type="file" accept=".html,.htm,.json" multiple class="hidden" />
+      </label>
+      <div id="importStatus" class="hidden text-xs sm:text-sm rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-700"></div>
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+        <div class="flex items-center gap-2">
+          <button id="btnExportJson" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition">
+            导出完整 JSON
+          </button>
+          <button id="btnClearCustom" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
+            清除本地新题
+          </button>
+        </div>
+        <button id="btnDoneImport" type="button" class="px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
+          完成
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Modal -->
+  <div id="syncModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-5 sm:p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto animate-fade-slide">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base sm:text-lg font-bold text-slate-900">做题记录与多端同步</h2>
+        <button id="btnCloseSync" type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">✕</button>
+      </div>
+
+      <!-- Local Progress Summary -->
+      <div class="rounded-xl bg-slate-50 border border-slate-200 p-3.5 flex flex-wrap items-center justify-between gap-2">
+        <div class="text-xs sm:text-sm text-slate-700">
+          本地已答 <strong id="syncAnsweredCount" class="text-slate-900">0</strong> 题 · 收藏 <strong id="syncFavCount" class="text-amber-600">0</strong> 题 · 错题 <strong id="syncWrongCount" class="text-rose-600">0</strong> 题
+        </div>
+        <button id="btnResetProgress" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
+          清空本地做题进度
+        </button>
+      </div>
+
+      <!-- Quick Code Sync -->
+      <div class="flex flex-col gap-2 pt-1 border-t border-slate-100">
+        <h3 class="text-xs sm:text-sm font-semibold text-slate-800">方式一：同步口令（合并收藏与错题）</h3>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnCopySyncCode" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
+            复制当前同步码
+          </button>
+          <span class="text-xs text-slate-400">仅同步收藏夹与错题本，导入时自动叠加合并</span>
+        </div>
+        <div class="flex gap-2 mt-1">
+          <input id="syncCodeInput" type="text" placeholder="在此粘贴另一台设备复制的同步码..." class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1E3A5F]" />
+          <button id="btnApplySyncCode" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 shrink-0 transition">
+            合并导入
+          </button>
+        </div>
+      </div>
+
+      <!-- GitHub Gist Cloud Sync -->
+      <div class="flex flex-col gap-2 pt-3 border-t border-slate-100">
+        <h3 class="text-xs sm:text-sm font-semibold text-slate-800">方式二：GitHub 云端双向合并同步（手机与电脑互通）</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          仅同步<strong>收藏夹</strong>与<strong>错题本</strong>，不覆盖各自设备的做题进度。每次同步都会把手机与电脑的记录<strong>叠加合并（取并集）</strong>，互不覆盖。
+        </p>
+        <input id="ghTokenInput" type="password" placeholder="GitHub Token (ghp_...)" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1E3A5F]" />
+        <input id="ghGistIdInput" type="text" placeholder="云端存档 ID（首次同步留空自动生成）" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-[#1E3A5F]" />
+        <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer select-none">
+          <input id="ghAutoSyncCheck" type="checkbox" class="rounded border-slate-300 text-[#1E3A5F]" />
+          <span>每次收藏或答错后自动合并同步到云端</span>
+        </label>
+        <div class="flex flex-wrap items-center gap-2 mt-1">
+          <button id="btnGhPush" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition">
+            立即双向合并同步
+          </button>
+          <button id="btnGhPull" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition">
+            仅从云端合并到本地
+          </button>
+        </div>
+        <div id="syncStatusMsg" class="hidden text-xs rounded-lg px-3 py-2 bg-slate-100 text-slate-700"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toastBanner" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs sm:text-sm font-medium shadow-lg"></div>
+
+  <script>
+    const BASE_CHAPTERS = [{"id": "ch1", "name": "第一章 导论", "count": 30}, {"id": "ch2_1", "name": "第二章 增值税（一）", "count": 31}, {"id": "ch2_2", "name": "第二章 增值税（二）", "count": 42}, {"id": "ch2_3", "name": "第二章 增值税（三）", "count": 40}, {"id": "ch3_1", "name": "第三章 消费税（一）", "count": 31}, {"id": "ch3_2", "name": "第三章 消费税（二）", "count": 20}, {"id": "ch_test", "name": "课堂测试补充（增值税）", "count": 5}];
+    const BASE_QUESTIONS = [{"id": 1, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "1", "type": "单选题", "stem": "关于税法的时间效力的陈述，下列选项正确的是（ 　）。", "options": [{"letter": "A", "text": "税法的时间效力是指税法何时生效的问题"}, {"letter": "B", "text": "税法的失效方式中，很少采用的是直接宣布废止"}, {"letter": "C", "text": "对于重要税法的个别条款的修订，目前大多采用这种自通过发布之日起生效的方式"}, {"letter": "D", "text": "我国及许多国家的税法均不坚持不溯及既往原则"}], "answer": "C", "analysis": ""}, {"id": 2, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "2", "type": "单选题", "stem": "税务机关在税务检查过程中发现某企业在新所得税法实施前的某项偷税（逃避缴纳税款）行为，在计算该企业应当补缴的税金时按原税法执行，该处理遵循了（　）原则。", "options": [{"letter": "A", "text": "法律不溯及既往原则"}, {"letter": "B", "text": "新法优于旧法"}, {"letter": "C", "text": "特别法优于普通法"}, {"letter": "D", "text": "实体从旧、程序从新"}], "answer": "D", "analysis": ""}, {"id": 3, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "3", "type": "单选题", "stem": "纳税人张某和税务所在缴纳税款上发生了争议，必须在缴纳有争议的税款后，税务复议机关才能受理李某的复议申请，这体现了税法适用原则中的（　 ）。", "options": [{"letter": "A", "text": "特别法优于普通法原则"}, {"letter": "B", "text": "程序优于实体原则"}, {"letter": "C", "text": "实体从旧原则"}, {"letter": "D", "text": "新法优于旧法原则"}], "answer": "B", "analysis": ""}, {"id": 4, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "4", "type": "单选题", "stem": "关于税收执法监督的说法，正确的是（　）。", "options": [{"letter": "A", "text": "税收执法监督的主体是司法机关、审计机关等"}, {"letter": "B", "text": "税收执法监督的对象是税务⾏政相对⼈"}, {"letter": "C", "text": "税收执法监督的内容是税务机关及其⼯作⼈员的⾏ 政执法⾏为"}, {"letter": "D", "text": "税收执法监督的形式均为事后监督"}], "answer": "C", "analysis": ""}, {"id": 5, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "5", "type": "单选题", "stem": "下列关于税收和税法的描述，正确的是（　 ）。", "options": [{"letter": "A", "text": "税收本质上是一种分配关系"}, {"letter": "B", "text": "从立法内容看，税法具有单一性"}, {"letter": "C", "text": "税法是调整税务机关与纳税人关系的法律规范"}, {"letter": "D", "text": "从法律性质看，税法是授权性法规"}], "answer": "A", "analysis": ""}, {"id": 6, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "6", "type": "单选题", "stem": "下列属于税法基本原则的是（ 　）。", "options": [{"letter": "A", "text": "特别法优于普通法"}, {"letter": "B", "text": "新法优于旧法"}, {"letter": "C", "text": "税收公平主义"}, {"letter": "D", "text": "程序法优于实体法"}], "answer": "C", "analysis": ""}, {"id": 7, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "7", "type": "单选题", "stem": "下列各项不属于纳税人权利范围的有（　）。", "options": [{"letter": "A", "text": "申请退还多缴税款权"}, {"letter": "B", "text": "发票使用检查权"}, {"letter": "C", "text": "索取有关税收凭证的权利"}, {"letter": "D", "text": "申请延期缴纳税款权"}], "answer": "B", "analysis": ""}, {"id": 8, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "8", "type": "单选题", "stem": "下列税法要素中，能够区别一种税与另一种税的重要标志是（　）。", "options": [{"letter": "A", "text": "纳税环节"}, {"letter": "B", "text": "征税对象"}, {"letter": "C", "text": "纳税地点"}, {"letter": "D", "text": "纳税义务人"}], "answer": "B", "analysis": ""}, {"id": 9, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "9", "type": "单选题", "stem": "下列各项中，采用超率累进税率的是（　）。", "options": [{"letter": "A", "text": "增值税"}, {"letter": "B", "text": "土地增值税"}, {"letter": "C", "text": "个人所得税"}, {"letter": "D", "text": "消费税"}], "answer": "B", "analysis": ""}, {"id": 10, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "10", "type": "单选题", "stem": "从税法法律性质来说，税法属于（　 ）。", "options": [{"letter": "A", "text": "习惯法"}, {"letter": "B", "text": "授权法"}, {"letter": "C", "text": "制定法"}, {"letter": "D", "text": "义务法"}], "answer": "D", "analysis": ""}, {"id": 11, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "11", "type": "单选题", "stem": "下列税收文件属于税收法规的是（ ）。", "options": [{"letter": "A", "text": "《中华人民共和国企业所得税法》"}, {"letter": "B", "text": "《中华人民共和国增值税法》"}, {"letter": "C", "text": "《中华人民共和国消费税暂行条例》"}, {"letter": "D", "text": "《中华人民共和国消费税暂行条例实施细则》"}], "answer": "C", "analysis": ""}, {"id": 12, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "12", "type": "单选题", "stem": "下列有关税法解释的表述中，正确的是（ 　）。", "options": [{"letter": "A", "text": "税法⽴法解释通常为事后解释"}, {"letter": "B", "text": "检察解释不可作为办案的依据"}, {"letter": "C", "text": "税法解释不具有针对性"}, {"letter": "D", "text": "税法解释不具有专属性"}], "answer": "A", "analysis": ""}, {"id": 13, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "13", "type": "单选题", "stem": "税收三个基本特征，其中（ ）是核心。", "options": [{"letter": "A", "text": "固定性"}, {"letter": "B", "text": "强制性"}, {"letter": "C", "text": "对等性"}, {"letter": "D", "text": "无偿性"}], "answer": "D", "analysis": ""}, {"id": 14, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "14", "type": "判断题", "stem": "减税是对应征税款减少征收一部分。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 15, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "15", "type": "判断题", "stem": "税目是征税对象的具体化。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 16, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "16", "type": "判断题", "stem": "税法与税制存在密切的关系，税法决定税制，税制为税法服务。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 17, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "17", "type": "判断题", "stem": "纳税期限是纳税人在发生纳税义务之前应缴纳税款的期限。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 18, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "18", "type": "判断题", "stem": "税收法律关系主体所享有的权利和承担的义务，是税收法律关系的核心。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 19, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "19", "type": "判断题", "stem": "纳税环节是税法对处于经济运动过程中的征税对象规定应予征税的环节。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 20, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "20", "type": "判断题", "stem": "比例税率是按照征税对象的一定计量单位，直接确定征收的金额。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 21, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "21", "type": "判断题", "stem": "税法的调整对象是税收分配中形成的权利和义务关系。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 22, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "22", "type": "判断题", "stem": "税法是指有权的国家机关制定的有关调整税收分配过程中形成的权利义务关系的法律规范的总和。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 23, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "23", "type": "判断题", "stem": "定额税率是按照征税对象的一定计量单位，直接确定征收的金额。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 24, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "24", "type": "多选题", "stem": "下列引起税收法律关系变更原因的有（　）。", "options": [{"letter": "A", "text": "税法修订或调整"}, {"letter": "B", "text": "纳税⼈履行了纳税义务"}, {"letter": "C", "text": "纳税人自身组织状况发生变化"}, {"letter": "D", "text": "纳税义务超过追缴期限"}, {"letter": "E", "text": "纳税人经营或财产情况发生变化"}], "answer": "ACE", "analysis": ""}, {"id": 25, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "25", "type": "多选题", "stem": "在我国现行税法体系中，以税收法律形式颁布的税种有（　）。", "options": [{"letter": "A", "text": "增值税"}, {"letter": "B", "text": "个⼈所得税"}, {"letter": "C", "text": "企业所得税"}, {"letter": "D", "text": "环境保护税"}, {"letter": "E", "text": "消费税"}], "answer": "ABCD", "analysis": ""}, {"id": 26, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "26", "type": "多选题", "stem": "按照税收实体法要素的规定，下列表述正确的有（　）。", "options": [{"letter": "A", "text": "税目的作用是进一步明确征税范围"}, {"letter": "B", "text": "跨期结转属于税基式减免"}, {"letter": "C", "text": "课税对象是据以征税的依据，税源的大小体现着纳税人的负担能力"}, {"letter": "D", "text": "定额税率不受课税对象价值量变化的影响"}, {"letter": "E", "text": "在比例税率条件下，边际税率往往要大于平均税率"}], "answer": "ABCD", "analysis": ""}, {"id": 27, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "27", "type": "多选题", "stem": "从广义的立法层次上划分，税法包括（　 ）。", "options": [{"letter": "A", "text": "全国人大制定的税收法律"}, {"letter": "B", "text": "国务院制定的税收法规"}, {"letter": "C", "text": "中央政府部门制定的税收规章"}, {"letter": "D", "text": "地方人大及常委会制定的地方性税收法规"}, {"letter": "E", "text": "市级政府制定的税收规章"}], "answer": "ABCD", "analysis": ""}, {"id": 28, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "28", "type": "多选题", "stem": "关于税收法律关系的特点，下列表述正确的有（　 ）。", "options": [{"letter": "A", "text": "税收法律关系的变更以主体双方意思表示一致为要件"}, {"letter": "B", "text": "权利义务关系具有不对等性"}, {"letter": "C", "text": "调整平等主体间的财产关系"}, {"letter": "D", "text": "具有财产所有权单向转移的性质"}, {"letter": "E", "text": "主体的一方只能是国家"}], "answer": "BDE", "analysis": ""}, {"id": 29, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "29", "type": "多选题", "stem": "关于税法的基本原则，下列表述正确的有（　）。", "options": [{"letter": "A", "text": "税务机关有权重新核定计税依据，体现的是税收公平主义原则"}, {"letter": "B", "text": "税收法定主义的功能偏重于保持税法的稳定性和可预测性"}, {"letter": "C", "text": "经济上的税收公平不具备强制约束力，仅作为制定税法的参考"}, {"letter": "D", "text": "实质课税原则的意义在于防止纳税人的偷税和避税"}, {"letter": "E", "text": "税收公平主义赋予纳税人既可以要求实体利益上税收公平，也可以要求程序上税收公平的权力"}], "answer": "BCDE", "analysis": ""}, {"id": 30, "chapterId": "ch1", "chapterName": "第一章 导论", "origNum": "30", "type": "多选题", "stem": "下列各项中，表述正确的是（　）。", "options": [{"letter": "A", "text": "税率是计算税额的尺度"}, {"letter": "B", "text": "税目是区分不同税种的主要标志"}, {"letter": "C", "text": "税目是对课税对象量的界定"}, {"letter": "D", "text": "税目是对课税对象质的界定"}, {"letter": "E", "text": "税率是衡量税负轻重的重要标志"}], "answer": "ADE", "analysis": ""}, {"id": 31, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "1", "type": "单选题", "stem": "从理论上说，作为增值税课税对象的增值额是指（ ）。", "options": [{"letter": "A", "text": "v+m"}, {"letter": "B", "text": "v"}, {"letter": "C", "text": "m"}, {"letter": "D", "text": "c+v+m"}], "answer": "A", "analysis": ""}, {"id": 32, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "2", "type": "单选题", "stem": "以下关于增值税类型的说法不正确的是（ ）。", "options": [{"letter": "A", "text": "2009年，我国增值税由过去的生产型变为消费型"}, {"letter": "B", "text": "消费型增值税是一种标准增值税"}, {"letter": "C", "text": "收入型增值税的法定增值额相当于国民收入"}, {"letter": "D", "text": "生产型增值税，其法定增值额大于理论上的增值额"}], "answer": "B", "analysis": ""}, {"id": 33, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "3", "type": "单选题", "stem": "以下关于增值税的表述不正确的是（ ）。", "options": [{"letter": "A", "text": "增值税是价外税"}, {"letter": "B", "text": "增值税属于间接税"}, {"letter": "C", "text": "增值税的作用是调节收入差距"}, {"letter": "D", "text": "我国增值税采用其他实行增值税的国家广泛采用的间接计算法计算税额"}], "answer": "C", "analysis": ""}, {"id": 34, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "4", "type": "单选题", "stem": "关于增值税纳税人的规定，说法正确的是（ 　）。", "options": [{"letter": "A", "text": "单位租赁或承包给其他单位或个人经营的，以出租人为纳税人"}, {"letter": "B", "text": "境外单位在境内提供应税劳务，一律以购买者为纳税人"}, {"letter": "C", "text": "报关进口货物，以进口货物的发货人为纳税人"}, {"letter": "D", "text": "资管产品运营过程中发生的增值税行为，以资管产品管理人为纳税人"}], "answer": "D", "analysis": ""}, {"id": 35, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "5", "type": "单选题", "stem": "下列纳税人，必须办理一般纳税人登记的是（　）。", "options": [{"letter": "A", "text": "其他个人"}, {"letter": "B", "text": "非企业性单位"}, {"letter": "C", "text": "不经常发生应税行为的单位"}, {"letter": "D", "text": "年应税销售额超过500万元且经常发生应税行为的生产企业"}], "answer": "D", "analysis": ""}, {"id": 36, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "6", "type": "单选题", "stem": "下列情形中，应征收增值税的是（　）。", "options": [{"letter": "A", "text": "韩国A公司向我国B公司销售位于我国境内的办公楼"}, {"letter": "B", "text": "英国E公司向我国F公司销售完全在英国境内使用的无形资产"}, {"letter": "C", "text": "澳大利亚G公司向我国H公司提供在澳大利亚境内的会议展览服务"}, {"letter": "D", "text": "德国C公司向我国D公司出租完全在德国境内使用的客车"}], "answer": "A", "analysis": ""}, {"id": 37, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "7", "type": "单选题", "stem": "单位或个体经营者的下列业务，不应视同销售征收增值税的有（　）。", "options": [{"letter": "A", "text": "商场将购买的月饼于中秋节发给职工"}, {"letter": "B", "text": "个人无偿赠与房产"}, {"letter": "C", "text": "食品厂将购买食品原料赠送他人"}, {"letter": "D", "text": "公司间无偿调拨货物"}], "answer": "A", "analysis": ""}, {"id": 38, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "8", "type": "单选题", "stem": "下列收入中，不征收增值税的是（ 　）。", "options": [{"letter": "A", "text": "与纳税人销售货物、 劳务、服务、无形资产、不动产的收入或者数量直接挂钩的财政补贴收入"}, {"letter": "B", "text": "被保险人获得的保险赔付"}, {"letter": "C", "text": "贷款利息收入"}, {"letter": "D", "text": "销售代销货物取得的收入"}], "answer": "B", "analysis": ""}, {"id": 39, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "9", "type": "判断题", "stem": "单位以承包、承租、挂靠方式经营的，承包人以发包人名义对外经营并由发包人承担相关法律责任的，则发包人为纳税人；否则，以承包人为纳税人。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 40, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "10", "type": "判断题", "stem": "在中华人民共和国境内发生增值税应税交易，以及进口货物，应当依照本法规定缴纳增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 41, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "11", "type": "判断题", "stem": "中国境外的单位或者个人在境内提供应税劳务，在境内未设有经营机构的，以其境内代理人为扣缴义务人；在境内没有代理人的，由中国境外的单位或者个人自行缴纳。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 42, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "12", "type": "判断题", "stem": "自2018年5月1日起，增值税小规模纳税人标准为年应征增值税销售额500万元及以下。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 43, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "13", "type": "判断题", "stem": "年应税销售额超过小规模纳税人标准的其他个人，即个体户以外的自然人，按小规模纳税人纳税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 44, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "14", "type": "判断题", "stem": "判断是否符合一般纳税人的标准，纳税人偶然发生的销售无形资产、转让不动产的销售额，也要计入年应税销售额。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 45, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "15", "type": "判断题", "stem": "在运输工具舱位互换业务中，互换运输工具舱位的双方均以各自换出运输工具舱位确认的全部价款和价外费用为销售额，按照“交通运输服务”缴纳增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 46, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "16", "type": "判断题", "stem": "远洋运输的程租、期租业务，属于交通运输服务中的水路运输服务。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 47, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "17", "type": "判断题", "stem": "航空运输的湿租业务，属于交通运输服务中的航空运输服务。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 48, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "18", "type": "判断题", "stem": "工厂将自产月饼作为福利发给员工，属于视同销售。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 49, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "19", "type": "判断题", "stem": "家电生产企业销售自产家电并负责安装，属于混合销售，按销售货物交税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 50, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "20", "type": "判断题", "stem": "兼营业务未分别核算销售额，从低适用税率或征收率征税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 51, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "21", "type": "判断题", "stem": "销售单用途卡，或者接受单用途卡持卡人充值取得的预收资金，不缴纳增值税，不得开具增值税专用发票。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 52, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "22", "type": "判断题", "stem": "因发行或者销售单用途卡并办理相关资金收付结算业务取得的手续费、结算费、服务费、管理费等收入，应按照现行规定缴纳增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 53, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "23", "type": "判断题", "stem": "单位或者个体工商户聘用的员工为本单位或者雇主提供取得工资的服务，不征收增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 54, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "24", "type": "判断题", "stem": "单位或者个体工商户为员工提供应税服务，需要征收增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 55, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "25", "type": "判断题", "stem": "增值税的免税是指经济实体或进口商品的任何人既不用缴纳本阶段增值税，又能抵扣进项税额。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 56, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "26", "type": "多选题", "stem": "根据我国现行增值税的规定，下列属于加工修理修配服务应当缴纳增值税的有（　）。", "options": [{"letter": "A", "text": "服装加工"}, {"letter": "B", "text": "房屋修缮"}, {"letter": "C", "text": "汽车租赁"}, {"letter": "D", "text": "道路维修"}, {"letter": "E", "text": "汽车维修"}], "answer": "AE", "analysis": "BCD属于销售服务"}, {"id": 57, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "27", "type": "多选题", "stem": "判断纳税人是否为增值税一般纳税人的年应税销售额，是指纳税人在连续不超过12个月或四个季度的经营期（含未取得收入的月份）累计应征增值税销售额在500万元以上，包括（ ）。", "options": [{"letter": "A", "text": "免税销售额"}, {"letter": "B", "text": "税务机关代开发票销售额"}, {"letter": "C", "text": "稽查查补销售额"}, {"letter": "D", "text": "纳税评估调整销售额"}, {"letter": "E", "text": "转让一栋办公楼取得的收入"}], "answer": "ABCD", "analysis": ""}, {"id": 58, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "28", "type": "多选题", "stem": "可选择按小规模纳税人纳税的是（ ）。", "options": [{"letter": "A", "text": "非企业性单位"}, {"letter": "B", "text": "不经常发生应税行为的企业"}, {"letter": "C", "text": "年应税销售额超过规定标准但不经常发生应税行为的单位和个体工商户"}, {"letter": "D", "text": "其他个人"}, {"letter": "E", "text": "税务师协会"}], "answer": "ABCE", "analysis": ""}, {"id": 59, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "29", "type": "多选题", "stem": "下列属于生产生活服务内的项目是（ ）。", "options": [{"letter": "A", "text": "研发和技术服务"}, {"letter": "B", "text": "信息技术服务"}, {"letter": "C", "text": "文化创意服务"}, {"letter": "D", "text": "物流辅助服务"}, {"letter": "E", "text": "互联网接入服务"}], "answer": "ABCD", "analysis": ""}, {"id": 60, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "30", "type": "多选题", "stem": "增值税的征收一般应同时具备以下哪几个条件（ ）。", "options": [{"letter": "A", "text": "应税行为是发生在中华人民共和国境内"}, {"letter": "B", "text": "应税行为是属于征税范围内的业务活动"}, {"letter": "C", "text": "应税服务是为他人提供的，非营业活动不缴增值税"}, {"letter": "D", "text": "应税行为是有偿的"}, {"letter": "E", "text": "应税服务是为他人提供的，非营业活动也要缴增值税"}], "answer": "ABCD", "analysis": ""}, {"id": 61, "chapterId": "ch2_1", "chapterName": "第二章 增值税（一）", "origNum": "31", "type": "多选题", "stem": "下列货物，适用9%增值税税率的有（　）。", "options": [{"letter": "A", "text": "方便面"}, {"letter": "B", "text": "果汁"}, {"letter": "C", "text": "食用盐"}, {"letter": "D", "text": "电子出版物"}, {"letter": "E", "text": "天然气"}], "answer": "CDE", "analysis": ""}, {"id": 62, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "1", "type": "单选题", "stem": "对纳税人为销售货物而出租出借包装物收取的押金，其增值税计税方法正确的是（ ）。", "options": [{"letter": "A", "text": "酒类包装物押金，一律并入销售额计税，其他货物押金，单独记账核算的，不并入销售额征税"}, {"letter": "B", "text": "单独记账核算的，一律不并入销售额征税，对逾期收取的包装物押金，均并入销售额征税"}, {"letter": "C", "text": "对销售除啤酒、黄酒外的其他酒类产品收取的包装物押金，均应并入当期销售额征税，其他货物押金，单独记账且未逾期者，不计算缴纳增值税"}, {"letter": "D", "text": "无论会计如何核算，均应并入销售额计算缴纳增值税"}], "answer": "C", "analysis": ""}, {"id": 63, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "2", "type": "单选题", "stem": "一般纳税人的下列购进项目中，其进项税额可以从销项税额中抵扣的有（　）。", "options": [{"letter": "A", "text": "因洪涝灾害毁损的外购商品"}, {"letter": "B", "text": "公司招待客户购买的餐饮服务"}, {"letter": "C", "text": "生产免税产品接受的加工劳务"}, {"letter": "D", "text": "因管理不善被盗窃的产成品所耗用的外购原材料"}], "answer": "A", "analysis": ""}, {"id": 64, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "3", "type": "单选题", "stem": "某企业为增值税一般纳税人，5月买入A上市公司股票，买入价280万元，支付手续费0.084万元。当月卖出其中的50%，发生买卖负差10万元。同年6月，卖出剩余的50%，卖出价200万元，支付手续费0.06万元，印花税0.2万元。该企业6月应缴纳增值税多少？（以上价格均为含税价格）", "options": [{"letter": "A", "text": "2"}, {"letter": "B", "text": "3.83"}, {"letter": "C", "text": "2.83"}, {"letter": "D", "text": "3"}], "answer": "C", "analysis": "该企业6月应缴纳增值税\n＝（200－280×50%－10）÷（1＋6%）×6%\n＝2.83（万元）"}, {"id": 65, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "4", "type": "单选题", "stem": "下列收入中，不征收增值税的是（　）。", "options": [{"letter": "A", "text": "贷款利息收入"}, {"letter": "B", "text": "销售代销货物取得的收入"}, {"letter": "C", "text": "纳税人取得的财政补贴收入"}, {"letter": "D", "text": "被保险人获得的保险赔付"}], "answer": "D", "analysis": ""}, {"id": 66, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "5", "type": "单选题", "stem": "某饭店（一般纳税人）6月份餐饮收入收费848000元，另收取包间服务费21200元。销项税额是（ ）元？", "options": [{"letter": "A", "text": "24600"}, {"letter": "B", "text": "82000"}, {"letter": "C", "text": "52152"}, {"letter": "D", "text": "49200"}], "answer": "D", "analysis": ""}, {"id": 67, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "6", "type": "单选题", "stem": "关于转让金融商品征收增值税的规定，下列说法正确的是（　）。", "options": [{"letter": "A", "text": "买入价按先进先出法确定"}, {"letter": "B", "text": "按照卖出价扣除买入价后的余额为计税销售额"}, {"letter": "C", "text": "转让金融商品出现的负差可结转到下一个会计年度的金融商品销售额中抵扣"}, {"letter": "D", "text": "以卖出价为计税销售额"}], "answer": "B", "analysis": ""}, {"id": 68, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "7", "type": "单选题", "stem": "对纳税人为销售货物而出租出借包装物收取的押金，其增值税计税方法正确的是（ ）。", "options": [{"letter": "A", "text": "对销售除啤酒、黄酒外的其他酒类产品收取的包装物押金，均应并入当期销售额征税，其他货物押金，单独记账且未逾期者，不计算缴纳增值税"}, {"letter": "B", "text": "单独记账核算的，一律不并入销售额征税，对逾期收取的包装物押金，均并入销售额征税。"}, {"letter": "C", "text": "酒类包装物押金，一律并入销售额计税，其他货物押金，单独记账核算的，不并入销售额征税。"}, {"letter": "D", "text": "无论会计如何核算，均应并入销售额计算缴纳增值税。"}], "answer": "A", "analysis": ""}, {"id": 69, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "8", "type": "单选题", "stem": "根据《增值税暂行条例》及其实施细则的规定，采取预收货款方式销售货物，增值税纳税义务的发生时间是（　）。", "options": [{"letter": "A", "text": "购买方收到货物的当天"}, {"letter": "B", "text": "销售方收到剩余货款的当天"}, {"letter": "C", "text": "销售方发出货物的当天"}, {"letter": "D", "text": "销售方收到第一笔货款的当天"}], "answer": "C", "analysis": ""}, {"id": 70, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "9", "type": "单选题", "stem": "纳税人外购货物用于下列项目，进项税额可以抵扣的是（　）。", "options": [{"letter": "A", "text": "免税项目"}, {"letter": "B", "text": "无偿赠送其他单位"}, {"letter": "C", "text": "集体福利"}, {"letter": "D", "text": "简易计税方法计税项目"}], "answer": "B", "analysis": ""}, {"id": 71, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "10", "type": "单选题", "stem": "某集成电路企业为增值税一般纳税人，符合进项税额加计抵减条件，今年3月该企业销项税额73万元，购进货物可抵扣进项税额60万元，上月进项税额加计抵减余额为5万元，该企业3月实际抵减加计抵减额（　）万元。", "options": [{"letter": "A", "text": "13"}, {"letter": "B", "text": "9"}, {"letter": "C", "text": "5"}, {"letter": "D", "text": "14"}], "answer": "A", "analysis": "当期计提加计抵减额＝当期可抵扣进项税额×15％＝60×15％＝9（万元）\n当期可抵减加计抵减额＝上期末加计抵减额余额＋当期计提加计抵减额－当期调减加计抵减额＝5＋9＝14（万元），\n加计抵减前应缴纳的增值税税额＝73－60＝13万元\n小于当期可加计抵减额14万元，所以本期实际抵减加计抵减额＝13万元。"}, {"id": 72, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "11", "type": "单选题", "stem": "某生产企业为增值税一般纳税人（未实行农产品进项税额核定扣除），某年5月从批发企业（小规模纳税人）购入初级农业产品橙子，取得增值税专用发票上注明金额100000元、税额3000元，当月全部领用生产瓶装橙汁。该批农产品可抵扣进项税额（　）元。", "options": [{"letter": "A", "text": "13000"}, {"letter": "B", "text": "9000"}, {"letter": "C", "text": "3000"}, {"letter": "D", "text": "10000"}], "answer": "D", "analysis": ""}, {"id": 73, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "12", "type": "单选题", "stem": "以下关于增值税纳税地点的表述中，错误的是（ ）。", "options": [{"letter": "A", "text": "总机构和分支机构不在同一县（市）的，分别向各自所在地主管税务机关申报纳税"}, {"letter": "B", "text": "进口货物向报关地海关申报纳税"}, {"letter": "C", "text": "固定业户在其机构所在地申报纳税"}, {"letter": "D", "text": "非固定业户在其居住所在地申报纳税"}], "answer": "D", "analysis": ""}, {"id": 74, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "13", "type": "单选题", "stem": "一般纳税人销售自行开发生产软件产品的增值税优惠政策是（　）。", "options": [{"letter": "A", "text": "减半征收"}, {"letter": "B", "text": "即征即退"}, {"letter": "C", "text": "先征后退"}, {"letter": "D", "text": "先征后返"}], "answer": "B", "analysis": ""}, {"id": 75, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "14", "type": "单选题", "stem": "某市一家科技公司（一般纳税人）购买一项境外A公司专利，向A公司支付特许权使用费318万元，A公司在中国境内未设机构。则：科技公司应代扣代缴增值税（ ）万元？", "options": [{"letter": "A", "text": "18"}, {"letter": "B", "text": "19.08"}, {"letter": "C", "text": "41.34"}, {"letter": "D", "text": "27"}], "answer": "A", "analysis": ""}, {"id": 76, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "15", "type": "单选题", "stem": "关于增值税的计税依据，下列说法正确的是（　 ）。", "options": [{"letter": "A", "text": "销售折让可以从销售额中扣除作为计税依据"}, {"letter": "B", "text": "采取还本销售的，以销售额减去还本成本后的余额作为计税依据"}, {"letter": "C", "text": "销售折扣可以从销售额中扣除作为计税依据"}, {"letter": "D", "text": "纳税人以旧换新销售货物的，应以折价款冲减货物价款后的余额计征增值税"}], "answer": "A", "analysis": ""}, {"id": 77, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "16", "type": "单选题", "stem": "某动漫企业自主研发动漫软件，当期销售自主研发的动漫软件的不含增值税销售额200万元，当期可抵扣的进项税12万元，则当期即征即退的增值税是多少？", "options": [{"letter": "A", "text": "8"}, {"letter": "B", "text": "6"}, {"letter": "C", "text": "2"}, {"letter": "D", "text": "14"}], "answer": "A", "analysis": "当期即征税款=200×13%—12=14（万元）\n3%的税负=200×3%=6（万元）\n即退增值税=14—6=8（万元）"}, {"id": 78, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "17", "type": "判断题", "stem": "销售自产的利用风力生产的电力产品，增值税即征即退50%的政策。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 79, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "18", "type": "判断题", "stem": "纳税人提供技术转让、技术开发和与之相关的技术咨询、技术服务免征增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 80, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "19", "type": "判断题", "stem": "纳税人租入固定资产、不动产，既用于一般计税方法计税项目，又用于简易计税方法计税项目、免征增值税项目、集体福利或者个人消费的，其进项税额准予从销项税额中全额抵扣。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 81, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "20", "type": "判断题", "stem": "某工业企业为增值税一般纳税人，今年2月发生业务销售货物，开具增值税专用发票注明金额300万元，在同一张发票金额栏注明的折扣金额共计50万元，为鼓励买方及早付款，给与现金折扣N/90，1/45，2/30，买方于第45天付款。该企业上述业务销项税额为多32.5万元。\n此外，由于1月销售的商品出现质量问题，与购货方协商后按照不含税金额200万元给予购货方20%折让，并按折让金额开具红字发票。则该业务应冲减的销项税额为5.2万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": "（1）销项税额\n＝（300－50）×13％ ＝32.5（万元）\n（2）该业务应冲减的销项税额\n=200×20%×13%=5.2（万元）"}, {"id": 82, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "21", "type": "判断题", "stem": "某生产企业为增值税一般纳税人，今年1月其员工因公出差取得如下票据：注明本单位员工身份信息的铁路车票，票价共计10万元；注明本单位员工身份信息的公路客票，票价共计3万元；道路通行费增值税电子普通发票，税额共计2万元。则该企业当月可以抵扣增值税进项税额为3.91万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": "该企业当月可以抵扣增值税进项税\n＝10÷（1＋9％）×9％＋3÷（1＋3％）×3％＋2\n＝2.91（万元）"}, {"id": 83, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "22", "type": "判断题", "stem": "含消费税的组成计税价格＝成本×（1＋成本利润率）＋消费税税额＝成本×（1＋成本利润率）÷（1+消费税税率）", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 84, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "23", "type": "判断题", "stem": "某生产企业为增值税一般纳税人（未实行农产品进项税额核定扣除），生产的产品均适用13%的增值税税率。去年5月销售产品取得不含税销售额200万元，本月从农业生产者购进农产品作为生产用原材料，收购发票上注明买价为56万元，购进其他原材料，取得增值税专用发票注明的金额100万元，税额13万元。则5月该企业应纳增值税为7.4万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": "销项税额＝200×13%＝26（万元）\n进项税额＝56×10%＋13＝18.60（万元）\n5月该企业应纳增值税＝26－18.6＝7.40（万元）"}, {"id": 85, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "24", "type": "判断题", "stem": "某白酒厂为增值税一般纳税人，去年6月销售白酒，开具增值税专用发票上的销售额800万元，另外收取包装物押金23.4万元；本月逾期未退还包装物押金56.5万元。6月该白酒厂增值税销项税额为106.69万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": "白酒生产企业应纳增值税税额\n＝800×13％＋23.4÷（1＋13％）×13％＝106.69（万元）"}, {"id": 86, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "25", "type": "判断题", "stem": "还本销售方式下销售额就是货物销售价格，不得从销售额中减除还本支出。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 87, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "26", "type": "判断题", "stem": "客运场站服务取得的全部价款和价外费用扣除支付给承运方运费后的余额为销售额，从承运方取得的增值税专用发票注明的增值税，可以抵扣。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": "客运场站服务取得的全部价款和价外费用扣除支付给承运方运费后的余额为销售额，从承运方取得的增值税专用发票注明的增值税，不得抵扣。"}, {"id": 88, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "27", "type": "判断题", "stem": "某啤酒厂为增值税一般纳税人，去年6月销售啤酒，开具增值税专用发票上的销售额800万元，另外收取包装物押金23.4万元；本月逾期未退还包装物押金56.5万元。6月该啤酒厂增值税销项税额为110.5万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": "啤酒厂不含税销售额\n＝800＋56.5÷（1＋13%）＝850（万元）\n销项税=850×13%=110.5（万元）"}, {"id": 89, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "28", "type": "判断题", "stem": "某食品生产企业为增值税一般纳税人，今年4月销售货物，开具的增值税专用发票上注明金额120万元，优质费11.3万元。该企业当月计算增值税的销售额为120万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 90, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "29", "type": "判断题", "stem": "以物易物以各自发出的货物核算销售额并计算销项税额，以各自收到的货物核算购货额并计算进项税额。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 91, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "30", "type": "判断题", "stem": "进项税额是纳税人购进货物、加工修理修配劳务、服务、无形资产、不动产，支付或者负担的增值税额。它与销售方收取的销项税额相对应。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 92, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "31", "type": "判断题", "stem": "不含消费税的组成计税价格＝成本×（1＋成本利润率），公式中成本利润率为10%。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 93, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "32", "type": "判断题", "stem": "某商业零售企业为增值税一般纳税人，去年1月以旧换新方式销售玉石首饰，旧玉石首饰作价283万元，实际收取新旧首饰差价款共计139万元；釆取以旧换新方式销售原价为3500元的金项链200件，每件收取差价款1500元。则销项税为39万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": "不含税销售额=（283＋139＋200×1500÷10000）÷（1＋13%）=400（万元）\n销项税＝400×13%＝52万元）"}, {"id": 94, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "33", "type": "判断题", "stem": "甲公司为增值税的一般纳税人，今年4月：向乙公司销售货物取得含税收入300万元，交给A运输公司运输，代垫运输费用1.5万元，运费发票已转交给乙公司。另提供物流运输取得含税收入40万元、提供仓储服务取得含税收入15万元。上述业务的销项税额为38.67万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": "销项税额＝300÷（1＋13％）×13％＋40÷（1＋9％）×9％＋15÷（1＋6％）×6％＝38.67（万元）"}, {"id": 95, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "34", "type": "判断题", "stem": "对个人（不包括认定为一般纳税人的个体工商户）如果按期纳税的，增值税起征点为月销售额5000—20000元（含本数）。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 96, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "35", "type": "多选题", "stem": "下列情形中，一般纳税人不得开具增值税专用发票的有（　）。", "options": [{"letter": "A", "text": "超市零售化妆品"}, {"letter": "B", "text": "商业企业零售烟酒"}, {"letter": "C", "text": "将货物销售给消费者个人"}, {"letter": "D", "text": "批发企业销售服装"}, {"letter": "E", "text": "销售免税货物"}], "answer": "ABCE", "analysis": ""}, {"id": 97, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "36", "type": "多选题", "stem": "生产生活服务包括（ ）。", "options": [{"letter": "A", "text": "商务辅助服务"}, {"letter": "B", "text": "鉴证咨询服务"}, {"letter": "C", "text": "广播影视服务"}, {"letter": "D", "text": "公路运输服务"}, {"letter": "E", "text": "租赁服务"}], "answer": "ABCE", "analysis": ""}, {"id": 98, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "37", "type": "多选题", "stem": "一般纳税人提供劳务派遣服务，选择差额纳税时允许扣除的项目有（ ）。", "options": [{"letter": "A", "text": "代用工单位支付给劳务派遣员工的工资"}, {"letter": "B", "text": "代用工单位支付给劳务派遣员工的福利"}, {"letter": "C", "text": "为劳务派遣人员办理的社会保险金"}, {"letter": "D", "text": "为劳务派遣人员办理的住房公积金"}, {"letter": "E", "text": "劳务派遣公司收取的管理费"}], "answer": "ABCD", "analysis": ""}, {"id": 99, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "38", "type": "多选题", "stem": "下列属于增值税“交通运输服务”征收范围的有（　）。", "options": [{"letter": "A", "text": "水路运输的程租业务"}, {"letter": "B", "text": "水路运输的光租业务"}, {"letter": "C", "text": "水路运输的期租业务"}, {"letter": "D", "text": "航空运输的湿租业务"}, {"letter": "E", "text": "航空运输的干租业务"}], "answer": "ACD", "analysis": ""}, {"id": 100, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "39", "type": "多选题", "stem": "关于增值税税收优惠，下列说法正确的有（ ）。", "options": [{"letter": "A", "text": "对纳税人销售自产的利用风力生产的电力产品，实行增值税即征即退50%的政策"}, {"letter": "B", "text": "企业招用建档立卡贫困人口，自签订劳动合同并缴纳社会保险当月起，在3年内按实际招用人数予以定额即征即退増值税"}, {"letter": "C", "text": "对安置残疾人的单位和个体工商户，由税务机关按纳税人安置残疾人的人数，限额扣减增值税"}, {"letter": "D", "text": "自主就业退役士兵从事个体经营的，自办理个体工商户登记当月起，在3年内予以先征后返增值税"}, {"letter": "E", "text": "纳税人初次购买增值税税控系统专用设备支付的费用以及纳税人缴纳的技术维护费可在增值税应纳税额中全额抵减"}], "answer": "AE", "analysis": ""}, {"id": 101, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "40", "type": "多选题", "stem": "纳税人下列销售行为免征增值税的有（　）。", "options": [{"letter": "A", "text": "将自产货物捐赠目标脱贫地区的企业"}, {"letter": "B", "text": "销售自主开发的生产的动漫软件"}, {"letter": "C", "text": "残疾人福利企业销售自产产品"}, {"letter": "D", "text": "社会团体收取的会费"}, {"letter": "E", "text": "残疾人本人为社会提供的服务"}], "answer": "ADE", "analysis": ""}, {"id": 102, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "41", "type": "多选题", "stem": "下列项目中免征增值税的有（ ）。", "options": [{"letter": "A", "text": "学生勤工俭学"}, {"letter": "B", "text": "婚姻介绍服务"}, {"letter": "C", "text": "职业培训机构提供的培训"}, {"letter": "D", "text": "幼儿园收取的赞助费"}, {"letter": "E", "text": "福利彩票发行收入"}], "answer": "ABE", "analysis": ""}, {"id": 103, "chapterId": "ch2_2", "chapterName": "第二章 增值税（二）", "origNum": "42", "type": "多选题", "stem": "下列服务属于生活服务的是（ ）。", "options": [{"letter": "A", "text": "餐饮住宿服务"}, {"letter": "B", "text": "文化体育服务"}, {"letter": "C", "text": "教育医疗服务"}, {"letter": "D", "text": "租赁服务"}, {"letter": "E", "text": "居民日常服务"}], "answer": "ABCE", "analysis": ""}, {"id": 104, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "1", "type": "单选题", "stem": "某白酒生产企业为增值税一般纳税人，去年6月销售啤酒，开具增值税专用发票上的销售额100万元，另外收取包装物押金22.6万元；本月逾期未退还包装物押金56.5万元。6月该啤酒厂增值税销项税额为（ ）万元。", "options": [{"letter": "A", "text": "13"}, {"letter": "B", "text": "15.9"}, {"letter": "C", "text": "15.6"}, {"letter": "D", "text": "19.5"}], "answer": "D", "analysis": ""}, {"id": 105, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "2", "type": "单选题", "stem": "某生产企业为增值税一般纳税人（未实行农产品进项税额核定扣除），2022年5月从批发企业（小规模纳税人）购入初级农业产品，取得增值税专用发票上注明金额100000元、税额3000元，当月全部领用生产适用税率13％的货物。该批农产品可抵扣进项税额（ 　）元。", "options": [{"letter": "A", "text": "10000"}, {"letter": "B", "text": "9000"}, {"letter": "C", "text": "3000"}, {"letter": "D", "text": "13000"}], "answer": "A", "analysis": ""}, {"id": 106, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "3", "type": "单选题", "stem": "关于转让金融商品征收增值税的规定，下列说法正确的是（　）。", "options": [{"letter": "A", "text": "以卖出价为计税销售额"}, {"letter": "B", "text": "按照卖出价扣除买入价后的余额为计税销售额"}, {"letter": "C", "text": "转让金融商品出现的负差可结转到下一个会计年度的金融商品销售额中抵扣"}, {"letter": "D", "text": "买入价按先进先出法确定"}], "answer": "B", "analysis": ""}, {"id": 107, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "4", "type": "单选题", "stem": "某啤酒厂为增值税一般纳税人，去年6月销售啤酒，开具增值税专用发票上的销售额100万元，另外收取包装物押金22.6万元；本月逾期未退还包装物押金56.5万元。6月该啤酒厂增值税销项税额为（ ）万元。", "options": [{"letter": "A", "text": "19.5"}, {"letter": "B", "text": "16.5"}, {"letter": "C", "text": "13"}, {"letter": "D", "text": "15.6"}], "answer": "A", "analysis": ""}, {"id": 108, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "5", "type": "单选题", "stem": "某网约车电商平台为增值税一般纳税人，去年11月提供网约车服务，开具普通发票不含税额5000万元，支付网约车司机服务费3800万元。网约车服务选择简易计税，该电商平台当月应缴纳增值税（　）万元。", "options": [{"letter": "A", "text": "33"}, {"letter": "B", "text": "250"}, {"letter": "C", "text": "150"}, {"letter": "D", "text": "60"}], "answer": "C", "analysis": "网约车服务属于公共交通运输服务，可选择简易计税，适用3％的征收率。应缴纳增值税＝5000×3％＝150（万元）。"}, {"id": 109, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "6", "type": "单选题", "stem": "一般纳税人购进货物发生下列情况，其进项税额不得从销项税额中抵扣的是（　）。", "options": [{"letter": "A", "text": "用于集体福利"}, {"letter": "B", "text": "用于对外投资"}, {"letter": "C", "text": "发生正常损失"}, {"letter": "D", "text": "用于分配给股东"}], "answer": "A", "analysis": ""}, {"id": 110, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "7", "type": "单选题", "stem": "某企业为增值税一般纳税人，去年12月买入A上市公司股票，买入价280万元，支付手续费0.084万元。当月卖出其中的50%，发生买卖负差10万元。今年1月，卖出剩余的50%，卖出价200万元，支付手续费0.06万元，印花税0.2万元。该企业1月应缴纳增值税多少？（以上价格均为含税价格）", "options": [{"letter": "A", "text": "3.4"}, {"letter": "B", "text": "11.32"}, {"letter": "C", "text": "2.83"}, {"letter": "D", "text": "5.66"}], "answer": "A", "analysis": ""}, {"id": 111, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "8", "type": "单选题", "stem": "今年1月，某运输公司（增值税一般纳税人）为灾区无偿提供运输服务，发生运输服务成本2万元，成本利润率10％，无最近同期提供同类服务的平均价格。当月为A企业提供运输服务，取得含税收入5.45万元。该运输公司当月上述业务的销项税额（ ）万元。", "options": [{"letter": "A", "text": "0.77"}, {"letter": "B", "text": "0.55"}, {"letter": "C", "text": "0.72"}, {"letter": "D", "text": "0.45"}], "answer": "D", "analysis": "为灾区无偿提供运输服务，不属于视同销售，不计算销项税额。该运输公司当月的销项税额＝5.45÷（1＋9％）×9％＝0.45（万元）。"}, {"id": 112, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "9", "type": "单选题", "stem": "卷烟厂今年3月销售雪茄烟200箱给各专卖店，取得不含税销售收入800万元；以雪茄烟50箱换回小轿车3辆。则销项税额为（ ）万元。", "options": [{"letter": "A", "text": "150"}, {"letter": "B", "text": "130"}, {"letter": "C", "text": "104"}, {"letter": "D", "text": "200"}], "answer": "B", "analysis": ""}, {"id": 113, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "10", "type": "单选题", "stem": "下列业务的增值税处理正确的是（　）。", "options": [{"letter": "A", "text": "商业企业向供货方收取的与商品销售额挂钩的返还收入，应视同销售计入销项税额"}, {"letter": "B", "text": "一般纳税人因进货退回而从销售方收回的增值税额，应从发生进货退回当期的进项税额中扣减"}, {"letter": "C", "text": "纳税人丢失已开具增值税专用发票抵扣联的，不能抵扣进项税额"}, {"letter": "D", "text": "商业企业向供货方收取的进场费，不可以开具增值税发票"}], "answer": "B", "analysis": ""}, {"id": 114, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "11", "type": "单选题", "stem": "A单位发生的下列行为中，不属于虚开增值税专用发票的是（ 　）。", "options": [{"letter": "A", "text": "其他个人为本单位提供商铺租赁服务，取得税务机关代开增值税专用发票"}, {"letter": "B", "text": "未在商场购物，让商场开具增值税专用发票"}, {"letter": "C", "text": "购买用于劳动保护的20双雨鞋，让商场开具25双雨鞋的增值税专用发票"}, {"letter": "D", "text": "从B单位购买货物，但让C单位为本单位开具增值税专用发票"}], "answer": "A", "analysis": ""}, {"id": 115, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "12", "type": "单选题", "stem": "某集成电路企业为增值税一般纳税人，符合进项税额加计抵减条件，2024年3月该企业销项税额73万元，购进货物与服务可抵扣进项税额60万元，上月进项税额加计抵减余额为5万元，该企业3月可加计抵减额（　）万元。", "options": [{"letter": "A", "text": "9"}, {"letter": "B", "text": "13"}, {"letter": "C", "text": "6"}, {"letter": "D", "text": "14"}], "answer": "A", "analysis": "当期计提加计抵减额＝当期可抵扣进项税额×15％＝60×15％＝9（万元）"}, {"id": 116, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "13", "type": "单选题", "stem": "对纳税人为销售货物而出租出借包装物收取的押金，其增值税计税方法正确的是（ ）。", "options": [{"letter": "A", "text": "单独记账核算的，一律不并入销售额征税，对逾期收取的包装物押金，均并入销售额征税。"}, {"letter": "B", "text": "酒类包装物押金，一律并入销售额计税，其他货物押金，单独记账核算的，不并入销售额征税。"}, {"letter": "C", "text": "对销售除啤酒、黄酒外的其他酒类产品收取的包装物押金，均应并入当期销售额征税，其他货物押金，单独记账且未逾期者，不计算缴纳增值税"}, {"letter": "D", "text": "无论会计如何核算，均应并入销售额计算缴纳增值税。"}], "answer": "C", "analysis": ""}, {"id": 117, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "14", "type": "单选题", "stem": "关于进口货物（非应税消费品）增值税计税依据的规定，下列说法正确的是（　）。", "options": [{"letter": "A", "text": "以到岸价格为计税依据"}, {"letter": "B", "text": "以海关审定的成交价格为计税依据"}, {"letter": "C", "text": "以关税完税价格与关税额之和为计税依据"}, {"letter": "D", "text": "以海关审定的成交价格与关税额之和为计税依据"}], "answer": "C", "analysis": ""}, {"id": 118, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "15", "type": "单选题", "stem": "一般纳税人提供下列服务，可以选择简易计税方法按5％征收率计算缴纳增值税的是（　）。", "options": [{"letter": "A", "text": "公共交通运输服务"}, {"letter": "B", "text": "文化体育服务"}, {"letter": "C", "text": "建筑服务"}, {"letter": "D", "text": "不动产经营租赁"}], "answer": "D", "analysis": ""}, {"id": 119, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "16", "type": "单选题", "stem": "一般纳税人的下列购进项目中，其进项税额从销项税额中抵扣的有（　）。", "options": [{"letter": "A", "text": "生产免税产品接受的加工劳务"}, {"letter": "B", "text": "因洪涝灾害毁损的外购商品"}, {"letter": "C", "text": "公司招待客户购买的餐饮服务"}, {"letter": "D", "text": "因管理不善被盗窃的产成品所耗用的外购原材料"}], "answer": "B", "analysis": ""}, {"id": 120, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "17", "type": "单选题", "stem": "以下关于增值税纳税地点的表述中，错误的是（ ）。", "options": [{"letter": "A", "text": "总机构和分支机构不在同一县（市）的，分别向各自所在地主管税务机关申报纳税"}, {"letter": "B", "text": "固定业户在其机构所在地申报纳税"}, {"letter": "C", "text": "非固定业户在其居住所在地申报纳税"}, {"letter": "D", "text": "进口货物向报关地海关申报纳税"}], "answer": "C", "analysis": ""}, {"id": 121, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "18", "type": "单选题", "stem": "根据《增值税暂行条例》及其实施细则的规定，采取预收货款方式销售货物，增值税纳税义务的发生时间是（ 　 ）。", "options": [{"letter": "A", "text": "销售方发出货物的当天"}, {"letter": "B", "text": "销售方收到剩余货款的当天"}, {"letter": "C", "text": "购买方收到货物的当天"}, {"letter": "D", "text": "销售方收到第一笔货款的当天"}], "answer": "A", "analysis": ""}, {"id": 122, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "19", "type": "单选题", "stem": "某商场（增值税一般纳税人）去年4月举办促销活动，全部商品8折销售。实际取得含税收入380000元，销售额和折扣额均在同一张发票上分别注明。上月销售商品本月发生退货，向消费者退款680元，该商场当月销项税额是（　）元。", "options": [{"letter": "A", "text": "49311.6"}, {"letter": "B", "text": "43638.58"}, {"letter": "C", "text": "43716.81"}, {"letter": "D", "text": "43628.41"}], "answer": "B", "analysis": "当月销项税额＝380000÷（1＋13％）×13％－680÷（1＋13％）×13％＝43638.58（元）"}, {"id": 123, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "20", "type": "单选题", "stem": "甲企业去年3月销售给某专卖商店A牌商品一批，由于货款回笼及时，根据合同规定，给予专卖商店2%折扣，甲企业实际取得不含税销售额98万元，销项税额是（ ）万元。", "options": [{"letter": "A", "text": "9.8"}, {"letter": "B", "text": "10"}, {"letter": "C", "text": "12.74"}, {"letter": "D", "text": "13"}], "answer": "D", "analysis": ""}, {"id": 124, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "21", "type": "单选题", "stem": "某生产企业为增值税一般纳税人，去年12月销售应税货物不含税销售额为600万元，销售免税货物销售额200万元，共同耗用材料的进项税额为65万元，该企业当月应缴纳的增值税为（　）万元。", "options": [{"letter": "A", "text": "78"}, {"letter": "B", "text": "94.25"}, {"letter": "C", "text": "29.25"}, {"letter": "D", "text": "67.75"}], "answer": "C", "analysis": "当月应缴纳的增值税＝600×13％－65×600÷（600＋200）＝29.25（万元）"}, {"id": 125, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "22", "type": "单选题", "stem": "某饭店（一般纳税人）6月份餐饮收入收费424000元，另收取包间服务费21200元。销项税额是（ ）元。", "options": [{"letter": "A", "text": "1200"}, {"letter": "B", "text": "25200"}, {"letter": "C", "text": "24600"}, {"letter": "D", "text": "24000"}], "answer": "B", "analysis": ""}, {"id": 126, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "23", "type": "单选题", "stem": "某市一家科技公司是一般纳税人，1月购买一项境外A公司专利，向A公司支付特许权使用费318万元，A公司在中国境内未设机构。则：科技公司应代扣代缴增值税（ ）。", "options": [{"letter": "A", "text": "16.98"}, {"letter": "B", "text": "15.9"}, {"letter": "C", "text": "31.8"}, {"letter": "D", "text": "18"}], "answer": "D", "analysis": ""}, {"id": 127, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "24", "type": "单选题", "stem": "某生产企业为增值税一般纳税人，货物适用增值税税率13%，去年3月末盘点库存材料时发现，上月购进的已抵扣进项税额的免税农产品（未纳入核定扣除范围）发生非正常损失，该批农产品成本80万元（含一般纳税人运输企业提供的运输服务成本1.5万元）。该纳税人应转出的进项税额（　）万元。", "options": [{"letter": "A", "text": "8.86"}, {"letter": "B", "text": "7.90"}, {"letter": "C", "text": "8.00"}, {"letter": "D", "text": "7.20"}], "answer": "B", "analysis": "应转出的进项税额＝（80-1.5）÷（1-9%）×9%+1.5×9%＝7.9（万元）"}, {"id": 128, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "25", "type": "单选题", "stem": "某具有进出口经营权的企业，去年2月从国外进口实木地板一批，关税完税价格76000元人民币，假定实木地板关税率10%，消费税率5%，其进口环节应纳增值税为（ ）元？", "options": [{"letter": "A", "text": "11440"}, {"letter": "B", "text": "3800"}, {"letter": "C", "text": "9880"}, {"letter": "D", "text": "8800"}], "answer": "A", "analysis": "进口环节应纳增值税\n=76000×（1+10%）/（1-5%）×13%=11440"}, {"id": 129, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "26", "type": "单选题", "stem": "某企业（一般纳税人）研制一种新型食品，为了进行市场推广和宣传，去年3月无偿赠送200件给消费者品尝，该食品无同类产品市场价，生产成本50元/件。销项税额为（ ）元。", "options": [{"letter": "A", "text": "1300"}, {"letter": "B", "text": "1430"}, {"letter": "C", "text": "3100"}, {"letter": "D", "text": "650"}], "answer": "B", "analysis": ""}, {"id": 130, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "27", "type": "判断题", "stem": "前年5月，纳税人买了一座楼办公用，专用发票价款1000万元，进项税额90万元。今年6月纳税人将办公楼改造成员工食堂。假设不动产净值率为90%。则进项税额需要转出81万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": "已抵扣进项税额×不动产净值率\n＝90×90%＝81（万元）"}, {"id": 131, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "28", "type": "判断题", "stem": "某酒店为增值税一般纳税人，适用进项加计抵减政策，今年5月一般计税项目销项税额200万元，当期可抵扣进项120万元，上期留抵10万元，则当期可计提的加计抵减额为18万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": "可计提的加计抵减额＝120×15%＝18（万元）"}, {"id": 132, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "29", "type": "判断题", "stem": "纳税人提供旅游服务，可选择以取得的全部价款和价外费用，扣除向旅游服务购买方收取并支付给其他单位或者个人的住宿费、餐饮费、交通费、签证费、门票费和支付给其他接团旅游企业的旅游费用后的余额为销售额。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 133, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "30", "type": "判断题", "stem": "甲超市为一般纳税人，去年7月购进某果园自产西瓜，销售发票注明价款为10万元；还从某果品公司（一般纳税人）购进水果，取得增值税专用发票上注明销售额5万元。则进项税额和采购成本分别是1.35万元和15万元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": "进项税额＝10×9%＋5×9%＝1.35（万元）\n采购成本＝10×（1－9%）＋5＝14.1（元）"}, {"id": 134, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "31", "type": "判断题", "stem": "纳税人采取以旧换新方式销售货物的，均应按新货物的同期销售价格确定销售额。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 135, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "32", "type": "判断题", "stem": "某企业A商品的不含税销售价格为100元，某客户欲购100件，商店给予9折优惠，销售额和折扣额在同一张发票上分别注明。则该业务的销项税额是1170元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 136, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "33", "type": "判断题", "stem": "自2022年3月1日起，从事再生资源回收的增值税一般纳税人销售其收购的再生资源，可以选择适用简易计税方法依照3%征收率计算缴纳增值税，或适用一般计税方法计算缴纳增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 137, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "34", "type": "判断题", "stem": "从生产者手中购进免税农产品，计算增值税进项税的扣除率均为9%。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 138, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "35", "type": "判断题", "stem": "销售额就是货物销售价格，不得从销售额中减除还本支出。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 139, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "36", "type": "判断题", "stem": "纳税人租入固定资产、不动产，既用于一般计税方法计税项目，又用于简易计税方法计税项目、免征增值税项目、集体福利或者个人消费的，其进项税额准予从销项税额中全额抵扣。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 140, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "37", "type": "多选题", "stem": "下列情形中，一般纳税人不得开具增值税专用发票的有（ 　）。", "options": [{"letter": "A", "text": "将货物销售给消费者个人"}, {"letter": "B", "text": "批发企业销售服装"}, {"letter": "C", "text": "销售免税货物"}, {"letter": "D", "text": "商业企业零售烟酒"}, {"letter": "E", "text": "超市零售化妆品"}], "answer": "ACDE", "analysis": ""}, {"id": 141, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "38", "type": "多选题", "stem": "一般纳税人提供劳务派遣服务，选择差额纳税时允许扣除的项目有（ ）。", "options": [{"letter": "A", "text": "代用工单位支付给劳务派遣员工的福利"}, {"letter": "B", "text": "代用工单位支付给劳务派遣员工的工资"}, {"letter": "C", "text": "为劳务派遣人员办理的社会保险金"}, {"letter": "D", "text": "劳务派遣公司收取的管理费"}, {"letter": "E", "text": "为劳务派遣人员办理的住房公积金"}], "answer": "ABCE", "analysis": ""}, {"id": 142, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "39", "type": "多选题", "stem": "关于增值税计税销售额，下列说法正确的有（　 ）。", "options": [{"letter": "A", "text": "以物易物方式下销售货物，双方以各自发出的货物核算销售额"}, {"letter": "B", "text": "客运场站服务，以其取得的全部价款和价外费用为计税销售额"}, {"letter": "C", "text": "贷款服务以实收和应收未收利息之和为计税销售额"}, {"letter": "D", "text": "销售折扣方式销售货物，折扣额不得从销售额中扣除"}, {"letter": "E", "text": "航空运输服务，代收的机场建设费不计入计税销售额"}], "answer": "ADE", "analysis": ""}, {"id": 143, "chapterId": "ch2_3", "chapterName": "第二章 增值税（三）", "origNum": "40", "type": "多选题", "stem": "一般纳税人销售下列服务，可以选择简易计税方法计税的有（　 ）。（不考虑疫情期间的优惠政策）", "options": [{"letter": "A", "text": "公共交通运输服务"}, {"letter": "B", "text": "提供物业管理服务的纳税人，向服务接受方收取的自来水水费"}, {"letter": "C", "text": "提供学历教育服务"}, {"letter": "D", "text": "经认定的动漫企业在境内转让动漫版权"}, {"letter": "E", "text": "电影放映服务"}], "answer": "ABDE", "analysis": ""}, {"id": 144, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "1", "type": "单选题", "stem": "6月，甲企业提供原料委托乙企业加工高档化妆品（消费税税率15％），乙企业按照本企业同类高档化妆品不含税价格100万元，代收代缴消费税15万元。甲企业当月全部收回，将其中30％对外销售，取得不含税销售额33万元，50％用于继续加工高档化妆品后销售，取得不含税销售额80万元。甲企业当月应缴纳消费税（　）万元。", "options": [{"letter": "A", "text": "4.5"}, {"letter": "B", "text": "12.45"}, {"letter": "C", "text": "4.95"}, {"letter": "D", "text": "9.45"}], "answer": "C", "analysis": "应缴纳消费税＝（33×15％－15×30％）＋（80×15％－15×50％）＝4.95（万元）"}, {"id": 145, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "2", "type": "单选题", "stem": "依据消费税的有关规定，下列消费品中，准予扣除已纳消费税的是（　）。", "options": [{"letter": "A", "text": "以委托加工的已税石脑油为原料生产的应税消费品"}, {"letter": "B", "text": "以委托加工的涂料为原料生产的涂料"}, {"letter": "C", "text": "以委托加工的已税酒为原料生产的粮食白酒"}, {"letter": "D", "text": "以委托加工的高档化妆品为原料生产的高档护肤品"}], "answer": "A", "analysis": ""}, {"id": 146, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "3", "type": "单选题", "stem": "关于消费税从价定率计税销售额，下列说法正确的是（　）。", "options": [{"letter": "A", "text": "金银首饰包装费不计入计税销售额"}, {"letter": "B", "text": "白酒包装物押金收取时不计入计税销售额"}, {"letter": "C", "text": "消费税计税销售额包括增值税"}, {"letter": "D", "text": "高档化妆品品牌使用费应计入计税销售额"}], "answer": "D", "analysis": ""}, {"id": 147, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "4", "type": "单选题", "stem": "甲卷烟厂购进烟丝，取得增值税专用发票，注明价款140万元，支付不含税运费8万元并取得货运企业增值税专用发票。将10％的烟丝运往丙企业委托加工雪茄烟，取得丙企业开具的增值税专用发票，注明加工费1.8万元、代垫的辅助材料0.2万元、增值税0.26万元，丙企业应代收代缴消费税（　）万元。（雪茄烟消费税率36％）", "options": [{"letter": "A", "text": "8.89"}, {"letter": "B", "text": "9.45"}, {"letter": "C", "text": "9.34"}, {"letter": "D", "text": "9.42"}], "answer": "B", "analysis": "丙企业代收代缴消费税\n＝[（140＋8）×10％＋1.8＋0.2]÷（1－36％）×36％＝9.45（万元）"}, {"id": 148, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "5", "type": "单选题", "stem": "下列关于委托加工业务消费税处理的说法，正确的是（　）。", "options": [{"letter": "A", "text": "纳税人委托个体经营者加工应税消费品，由委托方收回后在委托方所在地缴纳消费税"}, {"letter": "B", "text": "委托方委托加工应税消费品，受托方没有代收代缴税款的，一律由受托方补税"}, {"letter": "C", "text": "委托加工应税消费品的，若委托方未提供原材料成本，由委托方所在地主管税务机关核定其材料成本"}, {"letter": "D", "text": "加工业务消费税的纳税人是受托方"}], "answer": "A", "analysis": ""}, {"id": 149, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "6", "type": "单选题", "stem": "下列项目中，应同时缴纳消费税和增值税的是（　）。", "options": [{"letter": "A", "text": "零售的白酒"}, {"letter": "B", "text": "进口的服装"}, {"letter": "C", "text": "零售的高档化妆品"}, {"letter": "D", "text": "进口的卷烟"}], "answer": "D", "analysis": ""}, {"id": 150, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "7", "type": "单选题", "stem": "关于对超豪华小汽车征收消费税的规定下列说法正确的是（　）。", "options": [{"letter": "A", "text": "征税对象为每辆销售价格130万元（含增值税）及以上的小汽车"}, {"letter": "B", "text": "纳税人是消费者"}, {"letter": "C", "text": "计税价格是不含消费税的计税销售价格"}, {"letter": "D", "text": "纳税环节是生产环节和零售环节"}], "answer": "D", "analysis": ""}, {"id": 151, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "8", "type": "单选题", "stem": "根据税法规定，下列说法不正确的是（　）。", "options": [{"letter": "A", "text": "应税消费品征收消费税的，其税基不含有增值税"}, {"letter": "B", "text": "凡是征收消费税的消费品都征收增值税"}, {"letter": "C", "text": "应税消费品征收增值税的，其税基含有消费税"}, {"letter": "D", "text": "凡是征收增值税的货物都征收消费税"}], "answer": "D", "analysis": ""}, {"id": 152, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "9", "type": "单选题", "stem": "下列关于委托加工业务消费税处理的说法，正确的是（　）。", "options": [{"letter": "A", "text": "将委托加工收回的已税消费品直接加价销售的，不征收消费税"}, {"letter": "B", "text": "纳税人委托个体经营者加工应税消费品，由委托方收回后在委托方所在地缴纳消费税"}, {"letter": "C", "text": "委托加工应税消费品的，若委托方未提供原材料成本，由委托方所在地主管税务机关核定其材料成本"}, {"letter": "D", "text": "委托方委托加工应税消费品，受托方没有代收代缴税款的，一律由受托方补税"}], "answer": "B", "analysis": ""}, {"id": 153, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "10", "type": "单选题", "stem": "某化工生产企业3月以委托加工收回的已税高档化妆品为原料继续加工高档化妆品。委托加工收回的已税高档化妆品已纳消费税分别是：期初库存的已纳税消费税30万元，当期收回的已纳消费税10万元、期末库存的已纳消费税20万元。当月销售高档化妆品取得不含税收入280万元。该企业当月应纳消费税（　）。（高档化妆品消费税率15％）", "options": [{"letter": "A", "text": "42"}, {"letter": "B", "text": "12"}, {"letter": "C", "text": "39"}, {"letter": "D", "text": "22"}], "answer": "D", "analysis": "企业当月应纳消费税＝280×15％－20＝22（万元）"}, {"id": 154, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "11", "type": "单选题", "stem": "4月某手表厂生产销售A款手表300只，取得不含税收入360万元；生产销售B款手表500只，取得不含税收入80万元；销售手表配件取得不含税收入1.2万元，该厂本月应纳消费税（　）万元。（高档手表的消费税税率为20% ）", "options": [{"letter": "A", "text": "16.24"}, {"letter": "B", "text": "72"}, {"letter": "C", "text": "88"}, {"letter": "D", "text": "72.24"}], "answer": "B", "analysis": "该厂本月应纳消费税＝360×20％＝72（万元）"}, {"id": 155, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "12", "type": "单选题", "stem": "关于企业单独收取的包装物押金，下列消费税税务处理正确的是（　）。", "options": [{"letter": "A", "text": "销售葡萄酒收取的包装物押金不并入当期销售额计征消费税"}, {"letter": "B", "text": "销售啤酒收取的包装物押金应并入当期销售额计征消费税"}, {"letter": "C", "text": "销售白酒收取的包装物押金并入当期销售额计征消费税"}, {"letter": "D", "text": "销售黄酒收取的包装物押金应并入当期销售额计征消费税"}], "answer": "C", "analysis": ""}, {"id": 156, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "13", "type": "单选题", "stem": "下列业务属于视同销售应税消费品，应当征收消费税的是（　）。", "options": [{"letter": "A", "text": "商业企业将外购的非应税消费品以应税消费品对外销售"}, {"letter": "B", "text": "生产企业将自产的应税消费品用于连续生产应税消费品"}, {"letter": "C", "text": "商业企业将外购的应税消费品直接销售给消费者"}, {"letter": "D", "text": "生产企业将自产的应税消费品用于企业技术研发"}], "answer": "A", "analysis": ""}, {"id": 157, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "14", "type": "单选题", "stem": "下列说法中，符合消费税纳税义务发生时间规定的是（　）。", "options": [{"letter": "A", "text": "采取预收贷款结算方式的，为收到预收款的当天"}, {"letter": "B", "text": "委托加工应税消费品的，为支付加工费的当天"}, {"letter": "C", "text": "采取分期收款结算方式的，为发出应税消费品的当天"}, {"letter": "D", "text": "进口应税消费品的，为报关进口的当天"}], "answer": "D", "analysis": ""}, {"id": 158, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "15", "type": "单选题", "stem": "关于成品油生产企业的消费税政策，下列说法正确的是（　）。", "options": [{"letter": "A", "text": "在生产成品油过程中作为燃料消耗的自产成品油，征收消费税"}, {"letter": "B", "text": "在生产成品油过程中作为原料消耗的自产成品油，征收消费税"}, {"letter": "C", "text": "在生产成品油过程中作为动力消耗的自产成品油，征收消费税"}, {"letter": "D", "text": "以回收的废矿物油为原料生产的汽油、柴油等工业油料免征消费税"}], "answer": "D", "analysis": ""}, {"id": 159, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "16", "type": "单选题", "stem": "委托加工应税消费品，除委托方为个人外，由受托方履行的消费税扣缴义务是（　）。", "options": [{"letter": "A", "text": "代收代缴"}, {"letter": "B", "text": "代征代缴"}, {"letter": "C", "text": "代售代缴"}, {"letter": "D", "text": "代扣代缴"}], "answer": "A", "analysis": ""}, {"id": 160, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "17", "type": "单选题", "stem": "关于委托加工应税消费品的税务处理，下列说法正确的是（　）。", "options": [{"letter": "A", "text": "受托方代收代缴消费税后，委托方收回已税消费品对外销售的，不再征收消费税"}, {"letter": "B", "text": "委托方提供原材料的成本是委托方购进材料时支付的全部价款和价外费用"}, {"letter": "C", "text": "委托方提供原材料，但未提供材料成本的，由纳税人所在地主管税务机关核定其材料成本"}, {"letter": "D", "text": "纳税人委托个体工商户加工应税消费品，于委托方收回后在纳税人所在地缴纳消费税"}], "answer": "D", "analysis": ""}, {"id": 161, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "18", "type": "单选题", "stem": "下列关于已纳消费税扣除说法正确的是（　）。", "options": [{"letter": "A", "text": "以外购高度白酒连续生产低度白酒，可以按照当期购进数量计算准予扣除外购白酒已纳消费税"}, {"letter": "B", "text": "以外购高度白酒连续生产低度白酒，可以按照当期生产领用数量计算准予扣除外购白酒已纳消费税"}, {"letter": "C", "text": "葡萄酒生产企业购进葡萄酒连续生产应税葡萄酒的，准予从应纳消费税额中扣除所耗用的应税葡萄酒已纳消费税税款，本期消费税应纳税款不足抵扣的，不得结转抵扣"}, {"letter": "D", "text": "葡萄酒生产企业购进葡萄酒连续生产应税葡萄酒的，准予从应纳消费税额中扣除所耗用的应税葡萄酒已纳消费税税款，本期消费税应纳税额不足抵扣的，余额留待下期抵扣"}], "answer": "D", "analysis": ""}, {"id": 162, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "19", "type": "单选题", "stem": "下列消费品，属于目前消费税征税范围的是（ 　）。", "options": [{"letter": "A", "text": "大客车"}, {"letter": "B", "text": "卷烟"}, {"letter": "C", "text": "轮胎"}, {"letter": "D", "text": "洗发水"}], "answer": "B", "analysis": ""}, {"id": 163, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "20", "type": "单选题", "stem": "生产企业以外购应税消费品连续生产应税消费品，下列准予扣除应税消费品已纳消费税款的是（　）。", "options": [{"letter": "A", "text": "用已税烟丝连续生产的卷烟"}, {"letter": "B", "text": "用已税摩托车连续生产的摩托车"}, {"letter": "C", "text": "用已税白酒连续生产的白酒"}, {"letter": "D", "text": "用已税珠宝玉石连续生产的金银镶嵌首饰"}], "answer": "A", "analysis": ""}, {"id": 164, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "21", "type": "单选题", "stem": "去年7月，某筷子生产企业生产销售木制一次性筷子取得不含税销售额40万元，其中含包装物销售额0.6万元；销售金属工艺筷子取得不含税销售额50万元；销售竹制一次性筷子取得不含税销售额10万元。该企业当月应缴纳消费税（　）万元。（木制一次性筷子的消费税税率为5%）", "options": [{"letter": "A", "text": "1.47"}, {"letter": "B", "text": "4.50"}, {"letter": "C", "text": "1.50"}, {"letter": "D", "text": "2.00"}], "answer": "D", "analysis": "当月应缴纳消费税＝40×5％＝2（万元）"}, {"id": 165, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "22", "type": "多选题", "stem": "下列关于卷烟在批发环节征收消费税的说法，正确的是（　）。", "options": [{"letter": "A", "text": "卷烟批发公司应当将卷烟销售额与其他商品销售额分开核算，未分开核算的，一并征收消费税"}, {"letter": "B", "text": "卷烟批发公司向卷烟零售商销售卷烟，应计算缴纳消费税"}, {"letter": "C", "text": "卷烟批发公司向卷烟零售商销售卷烟，可将已纳的生产环节的消费税款从应纳消费税中扣除"}, {"letter": "D", "text": "零售商销售卷烟不征收消费税"}, {"letter": "E", "text": "卷烟批发公司向卷烟批发商销售卷烟，应计算缴纳消费税"}], "answer": "ABD", "analysis": ""}, {"id": 166, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "23", "type": "多选题", "stem": "关于消费税的征收范围的说法正确的是（　）。", "options": [{"letter": "A", "text": "高尔夫球包属于消费税的征收范围"}, {"letter": "B", "text": "购进乘用车或中轻型用客车生产的汽车属于“小汽车”的征收范围"}, {"letter": "C", "text": "实木指接地板及用于装饰、墙壁、天栅的实木装饰板属于“实木地板”的征收范围"}, {"letter": "D", "text": "以汽油、汽油组分调和生产的“甲醇汽油”和“乙醇汽油”属于“汽油”征收范围"}, {"letter": "E", "text": "用于水上运动和休闲娱乐等活动的非机动艇属于“游艇”的征收范围"}], "answer": "ABCD", "analysis": ""}, {"id": 167, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "24", "type": "多选题", "stem": "下列关于消费税的处理，说法正确的有（　）。", "options": [{"letter": "A", "text": "卷烟批发企业销售卷烟，不分销售对象，均应汇总按11%的比例税率和0.005元/支的定额税率计算缴纳消费税"}, {"letter": "B", "text": "生产企业将超豪华小汽车直接销售给消费者，仅缴纳生产环节的消费税"}, {"letter": "C", "text": "经营单位进口金银首饰无需缴纳进口环节消费税"}, {"letter": "D", "text": "五金批发企业购进大包装电池改成小包装电池销售，应计算缴纳消费税"}, {"letter": "E", "text": "珠宝商销售金银首饰及珠宝首饰，不能分别核算的，一律按销售金银首饰计算缴纳零售环节消费税"}], "answer": "CDE", "analysis": ""}, {"id": 168, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "25", "type": "多选题", "stem": "下列应税消费品中，准予扣除已纳消费税的有（　）。", "options": [{"letter": "A", "text": "以已税杆头、杆身和握把为原料生产的高尔夫球杆"}, {"letter": "B", "text": "以已税烟丝为原材料生产的卷烟"}, {"letter": "C", "text": "以已税小汽车改造生产小汽车"}, {"letter": "D", "text": "以已税珠宝玉石为原料生产的金基镶嵌首饰"}, {"letter": "E", "text": "以已税润滑油为原料生产的润滑油"}], "answer": "ABE", "analysis": ""}, {"id": 169, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "26", "type": "多选题", "stem": "关于委托加工应税消费品的消费税处理，下列说法正确的有（　）。", "options": [{"letter": "A", "text": "委托加工的加工费包括代垫辅助材料的实际成本"}, {"letter": "B", "text": "受托方没有代收代缴消费税款，委托方应补缴税款，受托方不再补税"}, {"letter": "C", "text": "受托方已代收代缴消费税的应税消费品，委托方收回后以高于受托方计税价格出售的，应申报缴纳消费税"}, {"letter": "D", "text": "委托加工应税消费品的消费税纳税人是受托方"}, {"letter": "E", "text": "委托加工消费税纳税地点（除个人外）是委托方所在地"}], "answer": "ABC", "analysis": ""}, {"id": 170, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "27", "type": "多选题", "stem": "关于金银首饰零售环节征收消费税，下列说法正确的有（　）。", "options": [{"letter": "A", "text": "金银首饰与其他产品组成成套消费品销售的，应区别应税和非应税消费品分别征税"}, {"letter": "B", "text": "金银首饰改在零售环节征税后，出口金银首饰不退消费税"}, {"letter": "C", "text": "金银首饰连同包装物销售，能够分别核算的，包装物不并入销售额计征消费税"}, {"letter": "D", "text": "纳税人采用以旧换新方式销售的金银首饰，应按实际收取的不含税的全部价款确定计税依据"}, {"letter": "E", "text": "单位用于馈赠的金银首饰，没有同类金银首饰销售价格的，按组成计税价格计算纳税"}], "answer": "BDE", "analysis": ""}, {"id": 171, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "28", "type": "多选题", "stem": "消费税的特点有（ ）。", "options": [{"letter": "A", "text": "税收调节的特殊性"}, {"letter": "B", "text": "征税环节的道道征性"}, {"letter": "C", "text": "征收方法的多样性"}, {"letter": "D", "text": "征税范围的选择性"}, {"letter": "E", "text": "税收负担的转嫁性"}], "answer": "ACDE", "analysis": ""}, {"id": 172, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "29", "type": "多选题", "stem": "下列行为中，既缴纳增值税又缴纳消费税的有（　）。", "options": [{"letter": "A", "text": "地板厂将生产的新型实木地板奖励给有突出贡献的职工"}, {"letter": "B", "text": "汽车厂将自产的应税小汽车赞助给某艺术节组委会"}, {"letter": "C", "text": "酒厂将自产的白酒赠送给协作单位"}, {"letter": "D", "text": "卷烟厂将自产的烟丝移送用于生产卷烟"}, {"letter": "E", "text": "日化厂将自产的高档香水精移送用于生产护肤品"}], "answer": "ABC", "analysis": ""}, {"id": 173, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "30", "type": "多选题", "stem": "某鞭炮厂（增值税一般纳税人）用外购已税的焰火继续加工高档焰火。10月销售高档焰火，开具增值税专用发票注明销售额1000万元；本月外购焰火400万元，取得增值税专用发票，月初库存外购焰火60万元，月末库存外购焰火50万元，相关发票当月已认证，下列说法正确的有（　）。（焰火消费税税率15%，上述价格均不含增值税）", "options": [{"letter": "A", "text": "该鞭炮厂计算缴纳消费税时，可以按照当月购进的全部已税焰火数量计算扣除已纳的消费税"}, {"letter": "B", "text": "当月该鞭炮厂应纳消费税88.5万元"}, {"letter": "C", "text": "该鞭炮厂计算缴纳消费税时，可以按照本月生产领用数量计算扣除外购已税鞭炮焰火已纳的消费税"}, {"letter": "D", "text": "该鞭炮厂计算缴纳增值税时，按照本月生产领用外购已税鞭炮焰火支付的进项税额可以从当期销项税额中抵扣"}, {"letter": "E", "text": "该鞭炮厂计算缴纳增值税时，当月购进的全部已税焰火支付的进项税额可以从当期销项税额中抵扣"}], "answer": "BCE", "analysis": "当月该鞭炮厂应纳消费税\n＝1000×15%－（60＋400－50）×15%\n＝88.5（万元）"}, {"id": 174, "chapterId": "ch3_1", "chapterName": "第三章 消费税（一）", "origNum": "31", "type": "多选题", "stem": "根据消费税现行规定，下列表述正确的有（　）。", "options": [{"letter": "A", "text": "税目列举的消费品都属消费税的征税范围"}, {"letter": "B", "text": "消费品生产企业没有对外销售的应税消费品均不征消费税"}, {"letter": "C", "text": "消费税实行多环节课征制度"}, {"letter": "D", "text": "消费税的税率呈现单一税率形式"}, {"letter": "E", "text": "消费税税收负担具有转嫁性"}], "answer": "AE", "analysis": ""}, {"id": 175, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "1", "type": "判断题", "stem": "啤酒生产企业销售的啤酒，不得以向其关联企业的啤酒销售公司销售的价格作为确定消费税税额的标准，而应当以其关联企业的啤酒销售公司对外的销售价格（含包装物及包装物押金）作为确定消费税税额的标准，并依此确定该啤酒消费税单位税额。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 176, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "2", "type": "判断题", "stem": "纳税人通过自设非独立核算门市部销售的自产应税消费品，应当按照门市部对外销售额或者销售数量计算征收消费税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}, {"id": 177, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "3", "type": "判断题", "stem": "某汽车厂为增值税一般纳税人，3月向4S店销售自产超豪华小汽车，取得不含增值税销售额2000万元；向消费者销售2辆自产超豪华小汽车，取得含增值税销售额339万元。超豪华小汽车生产环节消费税为40％，零售环节消费税为10％。则该汽车厂本月应缴纳的消费税税额为950元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": "该汽车厂本月应缴纳消费税＝2000×40％＋339÷（1＋13％）×（40％＋10％）＝950（万元）"}, {"id": 178, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "4", "type": "判断题", "stem": "纳税人用于以物易物（换取生产资料或消费资料）、投资入股、抵偿债务等方面的应税消费品，应当以纳税人同类应税消费品的最高销售价格为依据计算消费税和增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": ""}, {"id": 179, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "5", "type": "判断题", "stem": "某啤酒厂为增值税一般纳税人，2022年6月销售啤酒20吨，取得不含税销售额57400元。另收取包装物押金3500元（含供重复使用的塑料周转箱押金500元）并单独核算。则该厂当月应缴纳消费税4400元。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": "每吨不含税出厂价\n＝[57400＋（3500－500） ÷（1＋13％）]÷20＝3002.74元>3000元，该酒厂销售的啤酒属于甲类啤酒，定额消费税率为250元/吨。\n该酒厂当月应缴纳消费税\n＝20×250＝5000（元）"}, {"id": 180, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "6", "type": "判断题", "stem": "白酒生产企业销售给销售单位的白酒，生产企业消费税计税价格低于销售单位对外销售价格（不含增值税）60%以下的，税务机关应核定消费税最低计税价格。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": "70%"}, {"id": 181, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "7", "type": "阅读理解", "stem": "甲木制品厂为增值税一般纳税人，主要从事实木地板生产销售业务（消费税税率5％），2月发生下列业务：", "subQuestions": [{"subNum": "(1)", "type": "单选题", "stem": "（1）外购一批实木素板，取得增值税专用发票注明金额120万元，另支付运费2万元，取得增值税普通发票。\n（2）将上述外购已税素板30％连续生产A型实木地板，当月对外销售取得不含税销售额60万元。甲厂应缴纳消费税（　）万元？", "options": [{"letter": "A", "text": "2.1"}, {"letter": "B", "text": "1"}, {"letter": "C", "text": "3"}, {"letter": "D", "text": "1.2"}], "answer": "D"}, {"subNum": "(2)", "type": "单选题", "stem": "将上述外购已税素板30％委托乙厂加工B型实木地板，当月加工完毕全部收回，乙厂收取不含税加工费5万元，开具增值税专用发票，乙厂同类实木地板不含税售价为65万元。乙厂应代收代缴消费税（　）万元？", "options": [{"letter": "A", "text": "3.25"}, {"letter": "B", "text": "2.05"}, {"letter": "C", "text": "3"}, {"letter": "D", "text": "1.25"}], "answer": "A"}, {"subNum": "(3)", "type": "单选题", "stem": "将外购的材料成本为48.8万元的原木移送丙厂，委托加工C型实木地板，丙厂收取不含税加工费8万元，开具增值税专用发票，丙厂无同类实木地板售价，未履行扣缴义务。当月加工完毕甲厂全部收回后，对外销售70％，取得不含税销售额70万元，其余30％留存仓库。甲厂销售C型实木地板应缴纳消费税（　）万元？", "options": [{"letter": "A", "text": "5"}, {"letter": "B", "text": "0.4"}, {"letter": "C", "text": "2.48"}, {"letter": "D", "text": "3.5"}], "answer": "D"}, {"subNum": "(4)", "type": "单选题", "stem": "甲厂留存仓库的C型实木地板应缴纳消费税（　）万元？", "options": [{"letter": "A", "text": "2.1"}, {"letter": "B", "text": "2.4"}, {"letter": "C", "text": "0.9"}, {"letter": "D", "text": "1.5"}], "answer": "C"}], "analysis": "甲厂应缴纳消费税＝60×5％－120×30％×5％＝1.2（万元）\n乙厂应代收代缴消费税＝65×5％＝3.25（万元）\n甲厂销售C型实木地板应缴纳的消费税＝70×5％＝3.5（万元）\n甲厂留存仓库的C型实木地板应缴纳的消费税\n＝（48.8＋8）÷（1－5％）×5％×30％＝0.90（万元）"}, {"id": 182, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "8", "type": "阅读理解", "stem": "某日化厂为增值税一般纳税人，今年2月份的生产经营情况如下：（1）进口业务：进口一批高级香水精，完税价格23.07万元。 该日化厂进口香水精关税税率为20%。", "subQuestions": [{"subNum": "(1)", "type": "单选题", "stem": "进口关税为（ ）万元？", "options": [{"letter": "A", "text": "6.921"}, {"letter": "B", "text": "23.07"}, {"letter": "C", "text": "4.614"}, {"letter": "D", "text": "6.412"}], "answer": "C"}, {"subNum": "(2)", "type": "单选题", "stem": "进口环节的组成计税价格为（ ）万元？", "options": [{"letter": "A", "text": "28"}, {"letter": "B", "text": "32.57"}, {"letter": "C", "text": "30.56"}, {"letter": "D", "text": "30"}], "answer": "B"}, {"subNum": "(3)", "type": "单选题", "stem": "进口环节应纳消费税为（ ）万元？", "options": [{"letter": "A", "text": "4"}, {"letter": "B", "text": "7.89"}, {"letter": "C", "text": "3.4"}, {"letter": "D", "text": "4.89"}], "answer": "D"}, {"subNum": "(4)", "type": "单选题", "stem": "进口环节应纳增值税为（ ）万元？", "options": [{"letter": "A", "text": "4.23"}, {"letter": "B", "text": "7.65"}, {"letter": "C", "text": "3.89"}, {"letter": "D", "text": "4.39"}], "answer": "A"}], "analysis": "进口环节应纳关税=23.07 ×20%=4.614（万元）\n进口环节组成计税价格\n=（23.07＋23.07 ×20%）÷（1－15%）=32.57（万元）\n进口环节应纳消费税\n=32.57×15%=4.89（万元）\n进口增值税＝（23.07＋23.07×20％）÷（1-15％）×13％＝4.23（万元）\n或：进口增值税＝（23.07＋23.07×20％+4.89）×13％＝4.23（万元）"}, {"id": 183, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "9", "type": "阅读理解", "stem": "甲卷烟厂为增值税一般纳税人，今年1月初库存外购烟丝不含税买价5万元；从小规模纳税人购进烟丝，取得增值税专用发票，注明金额为20万元；月末外购库存烟丝不含税买价12万元。本月将外购烟丝用于连续生产甲类卷烟，本月销售甲类卷烟10箱（标准箱），取得不含税销售额22万元。", "subQuestions": [{"subNum": "(1)", "type": "单选题", "stem": "准予抵扣的消费税为（ ）万元？", "options": [{"letter": "A", "text": "6"}, {"letter": "B", "text": "1.5"}, {"letter": "C", "text": "3.9"}, {"letter": "D", "text": "3.6"}], "answer": "C"}, {"subNum": "(2)", "type": "单选题", "stem": "甲卷烟厂本月应缴纳消费税（　）万元？", "options": [{"letter": "A", "text": "8.57"}, {"letter": "B", "text": "12.32"}, {"letter": "C", "text": "6.47"}, {"letter": "D", "text": "12.47"}], "answer": "A"}, {"subNum": "(3)", "type": "单选题", "stem": "本月应纳增值税（ ）万元？", "options": [{"letter": "A", "text": "11.2"}, {"letter": "B", "text": "2.8"}, {"letter": "C", "text": "0.26"}, {"letter": "D", "text": "2.6"}], "answer": "B"}], "analysis": "准予抵扣的消费税=（5+20-12）×30%=3.9（万元）\n甲卷烟厂应缴纳消费税=22×56%+10×150÷10000-3.9=8.57（万元）\n甲卷烟厂应缴纳增值税=22×13%-20×3%=2.8（万元）"}, {"id": 184, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "10", "type": "单选题", "stem": "某市烟草集团公司属增值税一般纳税人，3月购进已税烟丝800万元（不含增值税），委托A企业加工甲类卷烟500箱，A企业每箱以不含税0.1万元收取加工费，当月A企业按正常进度投料加工生产卷烟200箱交由集团公司收回。（说明：烟丝消费税率为30%，甲类卷烟生产环节消费税为56%加150元/箱。）则A企业当月应当代收代缴的加工卷烟的消费税为多少万元？", "options": [{"letter": "A", "text": "369"}, {"letter": "B", "text": "439.54"}, {"letter": "C", "text": "460"}, {"letter": "D", "text": "422"}], "answer": "B", "analysis": "组成计税价格\n=（800÷500×200＋0.1×200＋200×150÷10000） ÷ （1－56%）\n=779.54（万元）\n代收代缴的消费税\n＝779.54×56%＋200×150÷10000＝439.54（万元）"}, {"id": 185, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "11", "type": "单选题", "stem": "某化妆品厂为增值税一般纳税人今年1月发生以下业务：8日销售高档化妆品400 箱，每箱不含税价6000元；15日销售同类化妆品500箱，每箱不含税价6500元。当月以200箱同类化妆品与某公司换取高档精油。该厂当月应纳消费税多少万元？", "options": [{"letter": "A", "text": "104.15"}, {"letter": "B", "text": "100.15"}, {"letter": "C", "text": "104.25"}, {"letter": "D", "text": "98.5"}], "answer": "C", "analysis": "应纳消费税\n=（6000×400+6500×500 +6500×200）÷10000×15%\n=104.25（万元）"}, {"id": 186, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "12", "type": "单选题", "stem": "甲卷烟厂将一批成本为62万元的烟丝，运往丙企业委托加工雪茄烟，取得丙企业开具的增值税专用发票，注明加工费1.8万元、代垫的辅助材料0.2万元、增值税0.26万元。丙企业应代收代缴消费税多少万元？没有同类产品价格。（雪茄烟消费税率36%）", "options": [{"letter": "A", "text": "15"}, {"letter": "B", "text": "36"}, {"letter": "C", "text": "48"}, {"letter": "D", "text": "20"}], "answer": "B", "analysis": "组成计税价格\n=[62＋1.8＋0.2]÷（1-36%）=100（万元）\n丙企业委托加工环节代收代缴消费税\n＝100×36%\n＝36（万元）"}, {"id": 187, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "13", "type": "单选题", "stem": "今年2月，某卷烟批发企业（持有烟草批发许可证）向商场批发甲类卷烟24万支，取得不含税销售额18.6万元，向其他批发单位批发甲类卷烟50万支，取得不含税销售额30万元。该企业当月应纳消费税多少万元？（卷烟批发环节消费税税率11%，0.005元/支）", "options": [{"letter": "A", "text": "2.87"}, {"letter": "B", "text": "2.57"}, {"letter": "C", "text": "3.21"}, {"letter": "D", "text": "2.17"}], "answer": "D", "analysis": "该企业当月应纳消费税\n＝18.6×11%＋24×0.005\n＝2.17（万元）"}, {"id": 188, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "14", "type": "单选题", "stem": "某化妆品厂1月将一批自产高档护肤类化妆品用于集体福利，生产成本35000元，将新研制的高档香水用于广告样品，生产成本20000元，上述货物已全部发出，均无同类产品售价。1月该化妆品厂上述业务应纳消费税多少元？[高档化妆品消费税利润率为5%，消费税税率15%]", "options": [{"letter": "A", "text": "11000"}, {"letter": "B", "text": "10191.18"}, {"letter": "C", "text": "12000"}, {"letter": "D", "text": "13000"}], "answer": "B", "analysis": "组成计税价格\n=（35000＋20000）×（1＋5%）÷（1－15%）\n=67941.18（元）\n应纳消费税\n＝ 67941.18 ×15%＝10191.18（元）"}, {"id": 189, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "15", "type": "单选题", "stem": "某酒厂主要生产白酒和其他酒，现将白酒和药酒各1斤组装套装，白酒80元/斤，药酒100元/斤，组装套装每套不含税价格为200元，请问每套应纳多少消费税？", "options": [{"letter": "A", "text": "36"}, {"letter": "B", "text": "21.5"}, {"letter": "C", "text": "41"}, {"letter": "D", "text": "37"}], "answer": "C", "analysis": "应缴纳的消费税＝200×20%＋2×0.5＝41（元）"}, {"id": 190, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "16", "type": "单选题", "stem": "某酒类股份有限公司为增值税一般纳税人，2月销售给下属销售公司42°白酒500斤，不含税出厂价100元/斤，税务机关认为销售价格明显偏低，上月销售公司对外销售同类白酒的平均价格为220元/斤。白酒消费税计税价格核定比例为60%。该公司应缴纳消费税元？", "options": [{"letter": "A", "text": "22000"}, {"letter": "B", "text": "22250"}, {"letter": "C", "text": "13450"}, {"letter": "D", "text": "24500"}], "answer": "C", "analysis": "应缴纳的消费税\n＝500×220×60%×20%＋500×0.5＝13450（元）"}, {"id": 191, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "17", "type": "单选题", "stem": "某酒厂为增值税一般纳税人，今年2月销售白酒4吨，取得不含税收入400000元，包装物押金11300元（单独记账核算），另收取运费45200元。该酒厂上述业务应纳消费税多少元？", "options": [{"letter": "A", "text": "93200"}, {"letter": "B", "text": "80000"}, {"letter": "C", "text": "93800"}, {"letter": "D", "text": "94000"}], "answer": "D", "analysis": "酒厂应纳消费税\n=[400000+（11300+45200）÷（1+13%）]×20%\n+4×2000×0.5\n=94000（元）"}, {"id": 192, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "18", "type": "多选题", "stem": "某卷烟厂与某商场签订购销合同，采取赊销方式销售给该商场M牌卷烟50箱，不含税价款100万元，合同约定本月收回 50%的货款，由于该商场资金周转问题，卷烟厂本月实际收到40%的货款。求该厂本月应纳增值税和消费税？", "options": [{"letter": "A", "text": "增值税6.5万元"}, {"letter": "B", "text": "增值税13万元"}, {"letter": "C", "text": "均为0元"}, {"letter": "D", "text": "消费税28.38万元"}, {"letter": "E", "text": "消费税56.76万元"}], "answer": "AD", "analysis": ""}, {"id": 193, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "19", "type": "多选题", "stem": "某啤酒厂3月自产啤酒20吨，赠送某啤酒节，每吨啤酒成本1000元，无同类产品售价。要求：计算消费税（220元/吨）及增值税。", "options": [{"letter": "A", "text": "增值税3432元"}, {"letter": "B", "text": "增值税3406元"}, {"letter": "C", "text": "消费税4400元"}, {"letter": "D", "text": "消费税2000元"}], "answer": "AC", "analysis": "应纳消费税\n＝20×220＝4400（元）\n应纳增值税\n＝[20×1000×（1＋10%）＋4400]×13%＝3432（元）"}, {"id": 194, "chapterId": "ch3_2", "chapterName": "第三章 消费税（二）", "origNum": "20", "type": "多选题", "stem": "为某企业特制一批白酒，用自产原浆白酒500斤勾浆68°白酒980斤作为年终奖励发给本企业职工，无同类白酒的销售价格，68°白酒生产成本为240元/斤。白酒的成本利润率为10%。求应纳消费税和增值税？", "options": [{"letter": "A", "text": "消费税为65000元"}, {"letter": "B", "text": "增值税为42121.63元"}, {"letter": "C", "text": "增值税为42000元"}, {"letter": "D", "text": "消费税为65292.5元"}], "answer": "BD", "analysis": "1）应缴纳的消费税\n组成计税价格\n= [240×980×（1＋10%）＋980×0.5）]÷（1－20%）\n=323987.5（元）\n应纳消费税\n＝323987.5×20%＋980×0.5＝65292.5（元）\n（2）应纳增值税\n＝ 323987.5×13%＝42121.63（元）"}, {"id": 195, "chapterId": "ch_test", "chapterName": "课堂测试补充（增值税）", "origNum": "测试-1", "type": "单选题", "stem": "下列各项中，属于兼营行为的是（　 ）。", "options": [{"letter": "A", "text": "建材商店向甲销售建材，同时为乙提供装饰服务"}, {"letter": "B", "text": "电信局为客户提供电话安装服务的同时又销售所安装的电话机"}, {"letter": "C", "text": "塑钢门窗商店销售产品并负责为客户提供安装服务"}, {"letter": "D", "text": "宾馆为顾客提供住宿服务的同时销售高档毛巾"}], "answer": "A", "analysis": "兼营是指纳税人的经营中既包括销售货物、劳务，又包括销售服务、无形资产或不动产，且两项业务并非发生在同一项销售行为中（如分别面向甲、乙不同客户）。"}, {"id": 196, "chapterId": "ch_test", "chapterName": "课堂测试补充（增值税）", "origNum": "测试-2", "type": "单选题", "stem": "下列关于增值税的表述不正确的是（　 ）。", "options": [{"letter": "A", "text": "税收负担最后由该商品的最终消费者承担"}, {"letter": "B", "text": "征税范围广，税源充裕"}, {"letter": "C", "text": "它是一种直接税"}, {"letter": "D", "text": "实行道道环节课征，但不重复征税"}], "answer": "C", "analysis": "增值税属于间接税，税负可通过价格转嫁给最终消费者，并非直接税。"}, {"id": 197, "chapterId": "ch_test", "chapterName": "课堂测试补充（增值税）", "origNum": "测试-3", "type": "多选题", "stem": "增值税一般的税人在进行下列生产经营活动时，在取得合法扣税凭证的前提下,能够抵扣进项税额的有（）", "options": [{"letter": "A", "text": "购进原材料所支付的运费"}, {"letter": "B", "text": "修建职工食堂购买钢筋和水泥支付的建筑材料费"}, {"letter": "C", "text": "委托修理厂修理生产设备而支付的修理费"}, {"letter": "D", "text": "从农民手中购进免税农产品而支付的买价"}, {"letter": "E", "text": "为进行企业宣传，特地委托加工一批用于免费赠送的货物而支付的加工费"}], "answer": "ACDE", "analysis": "B项用于集体福利（职工食堂），进项税额不得抵扣；E项免费赠送属于视同销售，对应的委托加工费进项税额准予抵扣。"}, {"id": 198, "chapterId": "ch_test", "chapterName": "课堂测试补充（增值税）", "origNum": "测试-4", "type": "判断题", "stem": "外国政府、国际组织和企业无偿援助的进口物资和设备法定免征增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "B", "analysis": "法定免征增值税的仅限“外国政府、国际组织”无偿援助的进口物资和设备，不包括外国企业无偿援助。"}, {"id": 199, "chapterId": "ch_test", "chapterName": "课堂测试补充（增值税）", "origNum": "测试-5", "type": "判断题", "stem": "学校提供的学历教育服务免征增值税。", "options": [{"letter": "A", "text": "对"}, {"letter": "B", "text": "错"}], "answer": "A", "analysis": ""}];
+    const STORAGE_KEY = 'tax_law_quiz_custom_v1';
+    let CHAPTERS = [...BASE_CHAPTERS];
+    let ALL_QUESTIONS = [...BASE_QUESTIONS];
+
+    const state = {
+      selectedChapters: new Set(CHAPTERS.map(c => c.id)),
+      typeFilter: 'all',
+      deck: [],
+      currentIndex: 0,
+      userAnswers: {},     // { [id]: string[] } for single/judge/multi
+      submitted: {},       // { [id]: boolean }
+      subAnswers: {},      // { [id]: { [subIdx]: string } } for 阅读理解
+      favorites: new Set(),
+      wrongBook: new Set(),
+      showScope: true,
+      showCard: false
+    };
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function isQuestionSubmitted(q) {
+      if (q.type === '阅读理解') {
+        const sa = state.subAnswers[q.id] || {};
+        return Object.keys(sa).length === q.subQuestions.length;
+      }
+      return !!state.submitted[q.id];
+    }
+
+    function isQuestionCorrect(q) {
+      if (q.type === '阅读理解') {
+        const sa = state.subAnswers[q.id] || {};
+        if (Object.keys(sa).length !== q.subQuestions.length) return false;
+        return q.subQuestions.every((sq, idx) => sa[idx] === sq.answer);
+      }
+      const chosen = (state.userAnswers[q.id] || []).slice().sort().join('');
+      const target = q.answer.split('').sort().join('');
+      return chosen === target;
+    }
+
+    function getScopedQuestions() {
+      return ALL_QUESTIONS.filter(q => state.selectedChapters.has(q.chapterId));
+    }
+
+    const FAV_STORAGE_KEY = 'tax_law_quiz_favs_v1';
+
+    function loadFavorites() {
+      try {
+        const raw = localStorage.getItem(FAV_STORAGE_KEY);
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) state.favorites = new Set(arr);
+        }
+      } catch (e) {}
+    }
+
+    function saveFavorites() {
+      try {
+        localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify([...state.favorites]));
+      } catch (e) {}
+    }
+
+    const WRONG_STORAGE_KEY = 'tax_law_quiz_wrong_v1';
+
+    function loadWrongBook() {
+      try {
+        const raw = localStorage.getItem(WRONG_STORAGE_KEY);
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) state.wrongBook = new Set(arr);
+        }
+      } catch (e) {}
+    }
+
+    function saveWrongBook() {
+      try {
+        localStorage.setItem(WRONG_STORAGE_KEY, JSON.stringify([...state.wrongBook]));
+      } catch (e) {}
+    }
+
+    function recordWrongQuestion(qId) {
+      if (!state.wrongBook.has(qId)) {
+        state.wrongBook.add(qId);
+        saveWrongBook();
+        maybeAutoSync();
+      }
+    }
+
+    function removeWrongQuestion(qId) {
+      if (state.wrongBook.has(qId)) {
+        state.wrongBook.delete(qId);
+        saveWrongBook();
+        showToast('已从错题本移除');
+        if (state.typeFilter === 'wrong') {
+          buildDeck(false);
+        } else {
+          renderStatsAndTypes();
+          renderFavButton();
+        }
+      }
+    }
+
+    function toggleFavorite(qId) {
+      if (state.favorites.has(qId)) {
+        state.favorites.delete(qId);
+        showToast('已取消收藏');
+      } else {
+        state.favorites.add(qId);
+        showToast('已加入收藏夹');
+      }
+      saveFavorites();
+      maybeAutoSync();
+      if (state.typeFilter === 'fav' && !state.favorites.has(qId)) {
+        buildDeck(false);
+      } else {
+        renderStatsAndTypes();
+        renderFavButton();
+      }
+    }
+
+    function buildDeck(resetProgress = false) {
+      if (resetProgress) {
+        state.userAnswers = {};
+        state.submitted = {};
+        state.subAnswers = {};
+      }
+      const scoped = getScopedQuestions();
+      let pool = scoped;
+      if (state.typeFilter === 'fav') {
+        pool = scoped.filter(q => state.favorites.has(q.id));
+      } else if (state.typeFilter === 'wrong') {
+        pool = scoped.filter(q => state.wrongBook.has(q.id));
+      } else if (state.typeFilter !== 'all') {
+        pool = scoped.filter(q => q.type === state.typeFilter);
+      }
+      state.deck = shuffleArray(pool);
+      state.currentIndex = 0;
+      render();
+    }
+
+    function toggleChapter(chId) {
+      if (state.selectedChapters.has(chId)) {
+        state.selectedChapters.delete(chId);
+      } else {
+        state.selectedChapters.add(chId);
+      }
+      buildDeck(false);
+    }
+
+    function setChapterScope(ids) {
+      state.selectedChapters = new Set(ids);
+      buildDeck(false);
+    }
+
+    function selectOption(letter) {
+      const q = state.deck[state.currentIndex];
+      if (!q || q.type === '阅读理解' || state.submitted[q.id]) return;
+
+      if (q.type !== '多选题') {
+        state.userAnswers[q.id] = [letter];
+        state.submitted[q.id] = true;
+        saveProgress();
+        if (!isQuestionCorrect(q)) {
+          recordWrongQuestion(q.id);
+        }
+      } else {
+        const current = state.userAnswers[q.id] || [];
+        if (current.includes(letter)) {
+          state.userAnswers[q.id] = current.filter(l => l !== letter);
+        } else {
+          state.userAnswers[q.id] = [...current, letter];
+        }
+      }
+      render();
+    }
+
+    function selectSubOption(qId, subIdx, letter) {
+      if (!state.subAnswers[qId]) state.subAnswers[qId] = {};
+      if (state.subAnswers[qId][subIdx]) return; // already answered
+      state.subAnswers[qId][subIdx] = letter;
+      saveProgress();
+      const parentQ = ALL_QUESTIONS.find(item => item.id === qId);
+      if (parentQ && parentQ.subQuestions && parentQ.subQuestions[subIdx]) {
+        if (letter !== parentQ.subQuestions[subIdx].answer) {
+          recordWrongQuestion(qId);
+        }
+      }
+      render();
+    }
+
+    function submitMulti() {
+      const q = state.deck[state.currentIndex];
+      if (!q || q.type !== '多选题' || state.submitted[q.id]) return;
+      const current = state.userAnswers[q.id] || [];
+      if (current.length === 0) return;
+      state.submitted[q.id] = true;
+      saveProgress();
+      if (!isQuestionCorrect(q)) {
+        recordWrongQuestion(q.id);
+      }
+      render();
+    }
+
+    function goToQuestion(idx) {
+      if (idx < 0 || idx >= state.deck.length) return;
+      state.currentIndex = idx;
+      render();
+    }
+
+    function formatAnswerDisplay(q, letterStr) {
+      if (q.type === '判断题') {
+        if (letterStr === 'A') return 'A（对）';
+        if (letterStr === 'B') return 'B（错）';
+      }
+      return letterStr;
+    }
+
+    function renderScopePanel() {
+      const panel = document.getElementById('scopePanel');
+      panel.classList.toggle('hidden', !state.showScope);
+
+      const scoped = getScopedQuestions();
+      document.getElementById('scopeSummary').textContent =
+        `已选 ${state.selectedChapters.size} / ${CHAPTERS.length} 章 · 共 ${scoped.length} 题`;
+
+      const grid = document.getElementById('chapterGrid');
+      grid.innerHTML = '';
+      CHAPTERS.forEach(ch => {
+        const active = state.selectedChapters.has(ch.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = active
+          ? 'px-3 py-2 rounded-xl border border-[#1E3A5F] bg-blue-50/70 text-[#1E3A5F] text-left flex items-center justify-between gap-2 transition'
+          : 'px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-left flex items-center justify-between gap-2 transition';
+        btn.innerHTML = `
+          <span class="text-xs sm:text-sm font-medium truncate">${ch.name}</span>
+          <span class="text-xs px-1.5 py-0.5 rounded-md ${active ? 'bg-[#1E3A5F] text-white' : 'bg-slate-100 text-slate-500'} shrink-0">${ch.count}题</span>
+        `;
+        btn.addEventListener('click', () => toggleChapter(ch.id));
+        grid.appendChild(btn);
+      });
+    }
+
+    function renderStatsAndTypes() {
+      const scoped = getScopedQuestions();
+      const counts = {
+        all: scoped.length,
+        '单选题': scoped.filter(q => q.type === '单选题').length,
+        '判断题': scoped.filter(q => q.type === '判断题').length,
+        '多选题': scoped.filter(q => q.type === '多选题').length,
+        '阅读理解': scoped.filter(q => q.type === '阅读理解').length,
+        fav: scoped.filter(q => state.favorites.has(q.id)).length,
+        wrong: scoped.filter(q => state.wrongBook.has(q.id)).length
+      };
+
+      const labels = {
+        all: `全部 (${counts.all})`,
+        '单选题': `单选 (${counts['单选题']})`,
+        '判断题': `判断 (${counts['判断题']})`,
+        '多选题': `多选 (${counts['多选题']})`,
+        '阅读理解': `阅读理解 (${counts['阅读理解']})`,
+        fav: `★ 收藏 (${counts.fav})`,
+        wrong: `错题本 (${counts.wrong})`
+      };
+
+      document.querySelectorAll('.type-btn').forEach(btn => {
+        const t = btn.dataset.type;
+        btn.textContent = labels[t];
+        const disabled = (t !== 'all' && t !== 'fav' && t !== 'wrong' && counts[t] === 0);
+        btn.disabled = disabled;
+        const active = state.typeFilter === t;
+        if (disabled) {
+          btn.className = 'type-btn px-2.5 py-1 text-xs font-medium rounded-md bg-slate-50 text-slate-300 cursor-not-allowed';
+        } else if (active) {
+          btn.className = 'type-btn px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1E3A5F] text-white transition';
+        } else {
+          btn.className = 'type-btn px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+        }
+      });
+
+      const answeredQs = scoped.filter(q => isQuestionSubmitted(q));
+      const correctQs = answeredQs.filter(q => isQuestionCorrect(q));
+      const accuracy = answeredQs.length > 0 ? Math.round((correctQs.length / answeredQs.length) * 100) : 0;
+
+      document.getElementById('statAnswered').textContent = answeredQs.length;
+      document.getElementById('statCorrect').textContent = correctQs.length;
+      document.getElementById('statAccuracy').textContent = `${accuracy}%`;
+
+      const pct = state.deck.length > 0 ? ((state.currentIndex + 1) / state.deck.length) * 100 : 0;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+    }
+
+    function renderGrid() {
+      const panel = document.getElementById('questionCardPanel');
+      panel.classList.toggle('hidden', !state.showCard);
+      if (!state.showCard) return;
+
+      const grid = document.getElementById('questionGrid');
+      grid.innerHTML = '';
+      state.deck.forEach((q, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = idx + 1;
+        const isCurrent = idx === state.currentIndex;
+        const isSub = isQuestionSubmitted(q);
+        const isRight = isSub && isQuestionCorrect(q);
+
+        let cls = 'h-9 rounded-lg text-xs font-semibold border transition flex items-center justify-center ';
+        if (isSub) {
+          cls += isRight
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 '
+            : 'bg-rose-50 text-rose-700 border-rose-300 ';
+        } else {
+          cls += 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 ';
+        }
+        if (isCurrent) {
+          cls += 'ring-2 ring-[#1E3A5F] ring-offset-1 ';
+        }
+        btn.className = cls;
+        btn.addEventListener('click', () => goToQuestion(idx));
+        grid.appendChild(btn);
+      });
+    }
+
+    function renderQuestion() {
+      const emptyEl = document.getElementById('emptyState');
+      const viewEl = document.getElementById('questionView');
+
+      if (state.deck.length === 0) {
+        emptyEl.classList.remove('hidden');
+        viewEl.classList.add('hidden');
+        if (state.selectedChapters.size === 0) {
+          document.getElementById('emptyTitle').textContent = '尚未选择任何章节';
+          document.getElementById('emptyDesc').textContent = '请在上方勾选至少一个章节开始刷题。';
+          document.getElementById('btnResetFilters').textContent = '全选所有章节';
+        } else if (state.typeFilter === 'fav') {
+          document.getElementById('emptyTitle').textContent = '当前所选章节暂无收藏题目';
+          document.getElementById('emptyDesc').textContent = '做题时点击题目右上角“☆ 收藏”即可加入收藏夹。';
+          document.getElementById('btnResetFilters').textContent = '查看全部题目';
+        } else if (state.typeFilter === 'wrong') {
+          document.getElementById('emptyTitle').textContent = '当前所选章节暂无错题';
+          document.getElementById('emptyDesc').textContent = '做题时答错的题目会自动收入错题本，方便随时重做。';
+          document.getElementById('btnResetFilters').textContent = '查看全部题目';
+        } else {
+          document.getElementById('emptyTitle').textContent = '该题型在所选章节中没有题目';
+          document.getElementById('emptyDesc').textContent = '请切换其他题型或扩大章节范围。';
+          document.getElementById('btnResetFilters').textContent = '查看全部题目';
+        }
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      viewEl.classList.remove('hidden');
+
+      const q = state.deck[state.currentIndex];
+      document.getElementById('qChapterBadge').textContent = q.chapterName;
+
+      const typeBadge = document.getElementById('qTypeBadge');
+      typeBadge.textContent = q.type;
+      const badgeStyles = {
+        '单选题': 'bg-blue-50 text-[#1E3A5F]',
+        '判断题': 'bg-amber-50 text-amber-800',
+        '多选题': 'bg-indigo-50 text-indigo-700',
+        '阅读理解': 'bg-teal-50 text-teal-800'
+      };
+      typeBadge.className = `px-2.5 py-0.5 text-xs font-semibold rounded-full ${badgeStyles[q.type] || 'bg-blue-50 text-[#1E3A5F]'}`;
+
+      document.getElementById('qProgressText').textContent = `第 ${state.currentIndex + 1} / ${state.deck.length} 题`;
+      document.getElementById('qOrigNum').textContent = `原题号 #${q.origNum}`;
+      renderFavButton();
+      document.getElementById('qStem').textContent = q.stem;
+
+      const optsEl = document.getElementById('optionsContainer');
+      const multiWrap = document.getElementById('multiSubmitWrap');
+      const subEl = document.getElementById('subQuestionsContainer');
+      const fbBox = document.getElementById('feedbackBox');
+
+      if (q.type === '阅读理解') {
+        optsEl.classList.add('hidden');
+        multiWrap.classList.add('hidden');
+        subEl.classList.remove('hidden');
+        subEl.innerHTML = '';
+
+        const sa = state.subAnswers[q.id] || {};
+        q.subQuestions.forEach((sq, sIdx) => {
+          const chosenLetter = sa[sIdx];
+          const isSubDone = !!chosenLetter;
+          const isSubRight = isSubDone && chosenLetter === sq.answer;
+
+          const card = document.createElement('div');
+          card.className = 'rounded-xl border border-slate-200 bg-slate-50/60 p-4 flex flex-col gap-3';
+
+          const subTitle = document.createElement('div');
+          subTitle.className = 'text-sm sm:text-base font-medium text-slate-900 leading-relaxed whitespace-pre-line';
+          subTitle.innerHTML = `<span class="font-bold text-[#1E3A5F] mr-1">${sq.subNum}</span> ${sq.stem}`;
+          card.appendChild(subTitle);
+
+          const subOpts = document.createElement('div');
+          subOpts.className = 'flex flex-col gap-2';
+          sq.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.disabled = isSubDone;
+
+            let wCls = 'option-btn w-full text-left px-3.5 py-2.5 rounded-lg border flex items-start gap-2.5 ';
+            let bCls = 'w-5 h-5 rounded text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 ';
+            let tag = '';
+
+            if (!isSubDone) {
+              wCls += 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50';
+              bCls += 'bg-slate-100 text-slate-600';
+            } else {
+              const isCorr = opt.letter === sq.answer;
+              const isSel = opt.letter === chosenLetter;
+              if (isCorr && isSel) {
+                wCls += 'border-emerald-500 bg-emerald-50 text-emerald-950';
+                bCls += 'bg-emerald-600 text-white';
+                tag = '<span class="ml-auto text-xs font-semibold text-emerald-700 shrink-0 pl-2">✓ 正确</span>';
+              } else if (isCorr && !isSel) {
+                wCls += 'border-emerald-400 bg-emerald-50/70 text-emerald-900';
+                bCls += 'bg-emerald-500 text-white';
+                tag = '<span class="ml-auto text-xs font-semibold text-emerald-700 shrink-0 pl-2">正确答案</span>';
+              } else if (!isCorr && isSel) {
+                wCls += 'border-rose-400 bg-rose-50 text-rose-950';
+                bCls += 'bg-rose-600 text-white';
+                tag = '<span class="ml-auto text-xs font-semibold text-rose-700 shrink-0 pl-2">✗ 错选</span>';
+              } else {
+                wCls += 'border-slate-200 bg-white/50 text-slate-400';
+                bCls += 'bg-slate-100 text-slate-400';
+              }
+            }
+
+            btn.className = wCls;
+            btn.innerHTML = `<span class="${bCls}">${opt.letter}</span><span class="text-sm leading-relaxed flex-1">${opt.text}</span>${tag}`;
+            btn.addEventListener('click', () => selectSubOption(q.id, sIdx, opt.letter));
+            subOpts.appendChild(btn);
+          });
+          card.appendChild(subOpts);
+
+          if (isSubDone) {
+            const resLine = document.createElement('div');
+            resLine.className = `text-xs font-semibold px-3 py-1.5 rounded-lg ${isSubRight ? 'bg-emerald-100/80 text-emerald-800' : 'bg-rose-100/80 text-rose-800'}`;
+            resLine.textContent = isSubRight
+              ? `✓ 回答正确（答案：${sq.answer}）`
+              : `✗ 回答错误，你的选择：${chosenLetter}，正确答案：${sq.answer}`;
+            card.appendChild(resLine);
+          }
+
+          subEl.appendChild(card);
+        });
+
+        // Show shared analysis when all sub-questions are answered
+        const allDone = Object.keys(sa).length === q.subQuestions.length;
+        if (allDone && q.analysis) {
+          fbBox.className = 'rounded-xl p-4 border bg-slate-50 border-slate-200 text-slate-800 animate-fade-slide';
+          document.getElementById('feedbackHeader').classList.add('hidden');
+          document.getElementById('feedbackUserAns').classList.add('hidden');
+          document.getElementById('feedbackAnalysis').textContent = q.analysis;
+          document.getElementById('feedbackAnalysisWrap').classList.remove('hidden', 'mt-2', 'pt-2.5', 'border-t');
+        } else {
+          fbBox.classList.add('hidden');
+        }
+      } else {
+        optsEl.classList.remove('hidden');
+        subEl.classList.add('hidden');
+        optsEl.innerHTML = '';
+
+        const chosen = state.userAnswers[q.id] || [];
+        const isSub = !!state.submitted[q.id];
+        const correctSet = new Set(q.answer.split(''));
+
+        q.options.forEach(opt => {
+          const isSelected = chosen.includes(opt.letter);
+          const isCorrectOpt = correctSet.has(opt.letter);
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.disabled = isSub;
+
+          let wrapperCls = 'option-btn w-full text-left px-4 py-3 rounded-xl border flex items-start gap-3 ';
+          let badgeCls = 'w-6 h-6 rounded-md text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 ';
+          let statusTag = '';
+
+          if (!isSub) {
+            if (isSelected) {
+              wrapperCls += 'border-[#1E3A5F] bg-blue-50/70 text-slate-900';
+              badgeCls += 'bg-[#1E3A5F] text-white';
+            } else {
+              wrapperCls += 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50';
+              badgeCls += 'bg-slate-100 text-slate-600';
+            }
+          } else {
+            if (isCorrectOpt && isSelected) {
+              wrapperCls += 'border-emerald-500 bg-emerald-50 text-emerald-950';
+              badgeCls += 'bg-emerald-600 text-white';
+              statusTag = '<span class="ml-auto text-xs font-semibold text-emerald-700 shrink-0 pl-2">✓ 选对</span>';
+            } else if (isCorrectOpt && !isSelected) {
+              wrapperCls += 'border-emerald-400 bg-emerald-50/60 text-emerald-900';
+              badgeCls += 'bg-emerald-500 text-white';
+              statusTag = '<span class="ml-auto text-xs font-semibold text-emerald-700 shrink-0 pl-2">正确答案</span>';
+            } else if (!isCorrectOpt && isSelected) {
+              wrapperCls += 'border-rose-400 bg-rose-50 text-rose-950';
+              badgeCls += 'bg-rose-600 text-white';
+              statusTag = '<span class="ml-auto text-xs font-semibold text-rose-700 shrink-0 pl-2">✗ 错选</span>';
+            } else {
+              wrapperCls += 'border-slate-200 bg-slate-50/50 text-slate-400';
+              badgeCls += 'bg-slate-100 text-slate-400';
+            }
+          }
+
+          btn.className = wrapperCls;
+          btn.innerHTML = `
+            <span class="${badgeCls}">${opt.letter}</span>
+            <span class="text-sm sm:text-base leading-relaxed flex-1">${opt.text}</span>
+            ${statusTag}
+          `;
+          btn.addEventListener('click', () => selectOption(opt.letter));
+          optsEl.appendChild(btn);
+        });
+
+        // Multi submit button
+        const btnSubmitMulti = document.getElementById('btnSubmitMulti');
+        if (q.type === '多选题' && !isSub) {
+          multiWrap.classList.remove('hidden');
+          btnSubmitMulti.disabled = chosen.length === 0;
+        } else {
+          multiWrap.classList.add('hidden');
+        }
+
+        // Feedback box
+        if (isSub) {
+          const right = isQuestionCorrect(q);
+          document.getElementById('feedbackHeader').classList.remove('hidden');
+          fbBox.className = right
+            ? 'rounded-xl p-4 border bg-emerald-50 border-emerald-200 text-emerald-900 animate-fade-slide'
+            : 'rounded-xl p-4 border bg-rose-50 border-rose-200 text-rose-900 animate-fade-slide';
+
+          const icon = document.getElementById('feedbackIcon');
+          const title = document.getElementById('feedbackTitle');
+          const corrEl = document.getElementById('feedbackCorrectAns');
+          const userEl = document.getElementById('feedbackUserAns');
+
+          if (right) {
+            icon.className = 'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-emerald-600 text-white';
+            icon.textContent = '✓';
+            title.textContent = '回答正确';
+            corrEl.textContent = `正确答案：${formatAnswerDisplay(q, q.answer)}`;
+            userEl.classList.add('hidden');
+          } else {
+            icon.className = 'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-rose-600 text-white';
+            icon.textContent = '✗';
+            title.textContent = '回答错误';
+            corrEl.textContent = `正确答案：${formatAnswerDisplay(q, q.answer)}`;
+            userEl.textContent = `你的选择：${formatAnswerDisplay(q, chosen.slice().sort().join(''))}`;
+            userEl.classList.remove('hidden');
+          }
+
+          const anaWrap = document.getElementById('feedbackAnalysisWrap');
+          const anaEl = document.getElementById('feedbackAnalysis');
+          if (q.analysis && q.analysis.trim()) {
+            anaEl.textContent = q.analysis;
+            anaWrap.className = 'mt-2 pt-2.5 border-t border-black/10 text-sm leading-relaxed whitespace-pre-line';
+          } else {
+            anaWrap.classList.add('hidden');
+          }
+        } else {
+          fbBox.classList.add('hidden');
+        }
+      }
+
+      document.getElementById('btnPrev').disabled = state.currentIndex === 0;
+      document.getElementById('btnNext').disabled = state.currentIndex >= state.deck.length - 1;
+    }
+
+    function render() {
+      renderScopePanel();
+      renderStatsAndTypes();
+      renderGrid();
+      renderQuestion();
+    }
+
+    // Event bindings
+    document.getElementById('btnToggleScope').addEventListener('click', () => {
+      state.showScope = !state.showScope;
+      renderScopePanel();
+    });
+    document.getElementById('btnToggleCard').addEventListener('click', () => {
+      state.showCard = !state.showCard;
+      renderGrid();
+    });
+    document.getElementById('btnShuffle').addEventListener('click', () => { buildDeck(false); showToast('已重新乱序排列'); });
+
+    document.getElementById('btnScopeAll').addEventListener('click', () => setChapterScope(CHAPTERS.map(c => c.id)));
+    document.getElementById('btnScopeVat').addEventListener('click', () => setChapterScope(['ch2_1', 'ch2_2', 'ch2_3', 'ch_test']));
+    document.getElementById('btnScopeCons').addEventListener('click', () => setChapterScope(['ch3_1', 'ch3_2']));
+    document.getElementById('btnScopeNone').addEventListener('click', () => setChapterScope([]));
+
+    document.getElementById('btnResetFilters').addEventListener('click', () => {
+      if (state.selectedChapters.size === 0) {
+        state.selectedChapters = new Set(CHAPTERS.map(c => c.id));
+      }
+      state.typeFilter = 'all';
+      buildDeck(false);
+    });
+
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        state.typeFilter = btn.dataset.type;
+        buildDeck(false);
+      });
+    });
+
+    document.getElementById('btnSubmitMulti').addEventListener('click', submitMulti);
+    document.getElementById('btnPrev').addEventListener('click', () => goToQuestion(state.currentIndex - 1));
+    document.getElementById('btnNext').addEventListener('click', () => goToQuestion(state.currentIndex + 1));
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const q = state.deck[state.currentIndex];
+      if (!q) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToQuestion(state.currentIndex - 1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToQuestion(state.currentIndex + 1);
+      } else if (e.key === 'Enter') {
+        if (q.type === '多选题' && !state.submitted[q.id]) {
+          submitMulti();
+        } else if (state.currentIndex < state.deck.length - 1) {
+          goToQuestion(state.currentIndex + 1);
+        }
+      } else if (q.type !== '阅读理解') {
+        const upper = e.key.toUpperCase();
+        const numMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D', '5': 'E' };
+        const letter = numMap[upper] || upper;
+        if (q.options.some(o => o.letter === letter)) {
+          selectOption(letter);
+        }
+      }
+    });
+
+    function showToast(msg) {
+      const el = document.getElementById('toastBanner');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 2800);
+    }
+
+    function normStem(s) {
+      return (s || '')
+        .replace(/[\u00a0\u3000]/g, ' ')
+        .replace(/[\s()（）【】\[\]，。、；：？！,.?!"'“”‘’]+/g, '');
+    }
+
+    function cleanInline(t) {
+      return (t || '').replace(/\u00a0/g, ' ').replace(/[ \t\r\n]+/g, ' ').trim();
+    }
+
+    function extractParaText(el) {
+      if (!el) return '';
+      const ps = el.querySelectorAll('p');
+      if (ps.length > 0) {
+        const lines = [];
+        ps.forEach(p => {
+          const clone = p.cloneNode(true);
+          clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+          clone.textContent.split('\n').forEach(line => {
+            const c = cleanInline(line);
+            if (c) lines.push(c);
+          });
+        });
+        if (lines.length > 0) return lines.join('\n');
+      }
+      return cleanInline(el.textContent);
+    }
+
+    function parseHtmlOptions(ulEl) {
+      if (!ulEl) return [];
+      const opts = [];
+      ulEl.querySelectorAll(':scope > li').forEach(li => {
+        let letter = '';
+        for (const node of li.childNodes) {
+          if (node.nodeType === 3 && node.textContent.trim()) {
+            letter = cleanInline(node.textContent).replace(/\.$/, '');
+            break;
+          }
+        }
+        let body = extractParaText(li);
+        const mLead = letter.match(/^([A-E])[\.\s]+(.*)$/);
+        if (mLead) {
+          letter = mLead[1];
+          body = mLead[2].trim();
+        } else if (letter && body.startsWith(letter + '.')) {
+          body = body.slice(letter.length + 1).trim();
+        } else if (!letter) {
+          const m = body.match(/^([A-E])[\.\s]+(.*)$/);
+          if (m) {
+            letter = m[1];
+            body = m[2].trim();
+          }
+        }
+        opts.push({ letter, text: body });
+      });
+      return opts;
+    }
+
+    function parseChaoxingHtml(htmlText, fallbackName) {
+      const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+      const titleEl = doc.querySelector('h2.mark_title');
+      const chName = titleEl ? cleanInline(titleEl.textContent) : fallbackName;
+      const chId = 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const parsed = [];
+
+      doc.querySelectorAll('div.mark_item').forEach(item => {
+        if (item.closest('div.mark_read')) return;
+        item.querySelectorAll(':scope > div.questionLi').forEach(qDiv => {
+          const h3 = qDiv.querySelector('h3.mark_name');
+          if (!h3) return;
+          let qNum = '';
+          for (const n of h3.childNodes) {
+            if (n.nodeType === 3 && n.textContent.trim()) {
+              qNum = cleanInline(n.textContent).replace(/\.$/, '');
+              break;
+            }
+          }
+          const typeSpan = h3.querySelector('span.colorShallow');
+          const qType = typeSpan ? cleanInline(typeSpan.textContent).split(',')[0].replace(/[()（）]/g, '').trim() : '单选题';
+          const qtSpan = h3.querySelector('span.qtContent');
+          const stem = extractParaText(qtSpan);
+          if (!stem) return;
+
+          if (qType === '阅读理解') {
+            const subQs = [];
+            const markRead = qDiv.querySelector('div.mark_read');
+            if (markRead) {
+              markRead.querySelectorAll(':scope > div.mark_item').forEach(subItem => {
+                const sh3 = subItem.querySelector('h3.mark_name');
+                const subNum = sh3 ? cleanInline(sh3.childNodes[0]?.textContent || '') : '';
+                let sStem = '';
+                const pLines = [];
+                subItem.querySelectorAll(':scope > p').forEach(p => {
+                  const t = cleanInline(p.textContent);
+                  if (t) pLines.push(t);
+                });
+                sStem = pLines.join('\n');
+                const sOpts = parseHtmlOptions(subItem.querySelector('ul.mark_letter'));
+                const ansEl = subItem.querySelector('span.colorGreen');
+                const sAns = ansEl ? cleanInline(ansEl.textContent).split(/[:：]/).pop().trim() : '';
+                if (sStem && sOpts.length && sAns) {
+                  subQs.push({ subNum, type: '单选题', stem: sStem, options: sOpts, answer: sAns });
+                }
+              });
+            }
+            const anaDiv = qDiv.querySelector('div.analysis');
+            let analysis = '';
+            if (anaDiv) {
+              const clone = anaDiv.cloneNode(true);
+              clone.querySelectorAll('i').forEach(i => i.remove());
+              analysis = extractParaText(clone);
+            }
+            if (subQs.length > 0) {
+              parsed.push({ chapterId: chId, chapterName: chName, origNum: qNum, type: '阅读理解', stem, subQuestions: subQs, analysis });
+            }
+          } else {
+            const opts = parseHtmlOptions(qDiv.querySelector('ul.qtDetail'));
+            const rightEl = qDiv.querySelector('span.rightAnswerContent');
+            let ans = rightEl ? cleanInline(rightEl.textContent) : '';
+            if (!ans && qDiv.querySelector('span.marking_dui')) {
+              const stuEl = qDiv.querySelector('span.stuAnswerContent');
+              ans = stuEl ? cleanInline(stuEl.textContent) : '';
+            }
+            if (qType === '判断题') {
+              if (ans === '对') ans = 'A';
+              else if (ans === '错') ans = 'B';
+            }
+            const anaEl = qDiv.querySelector('span.qtAnalysis');
+            const analysis = extractParaText(anaEl);
+            if (opts.length && ans) {
+              parsed.push({ chapterId: chId, chapterName: chName, origNum: qNum, type: qType, stem, options: opts, answer: ans, analysis });
+            }
+          }
+        });
+      });
+
+      return { chId, chName, questions: parsed };
+    }
+
+    function loadCustomBank() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (Array.isArray(saved.chapters) && Array.isArray(saved.questions)) {
+          CHAPTERS = [...BASE_CHAPTERS, ...saved.chapters];
+          ALL_QUESTIONS = [...BASE_QUESTIONS, ...saved.questions];
+          saved.chapters.forEach(c => state.selectedChapters.add(c.id));
+        }
+      } catch (e) {}
+    }
+
+    function saveCustomBank(customChapters, customQuestions) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ chapters: customChapters, questions: customQuestions }));
+      } catch (e) {}
+    }
+
+    function getCustomData() {
+      const baseIds = new Set(BASE_CHAPTERS.map(c => c.id));
+      return {
+        chapters: CHAPTERS.filter(c => !baseIds.has(c.id)),
+        questions: ALL_QUESTIONS.filter(q => !baseIds.has(q.chapterId))
+      };
+    }
+
+    async function handleImportFiles(files) {
+      const statusEl = document.getElementById('importStatus');
+      statusEl.classList.remove('hidden');
+      const existingStems = new Set(ALL_QUESTIONS.map(q => normStem(q.stem)));
+      let nextId = ALL_QUESTIONS.reduce((m, q) => Math.max(m, q.id), 0) + 1;
+      let addedTotal = 0;
+      let skippedTotal = 0;
+      const custom = getCustomData();
+
+      for (const file of files) {
+        const text = await file.text();
+        if (file.name.toLowerCase().endsWith('.json')) {
+          try {
+            const j = JSON.parse(text);
+            const qs = Array.isArray(j) ? j : (j.questions || []);
+            const chName = file.name.replace(/\.json$/i, '');
+            const chId = 'custom_json_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+            const addedForCh = [];
+            qs.forEach(q => {
+              const ns = normStem(q.stem);
+              if (!ns || existingStems.has(ns)) {
+                skippedTotal++;
+                return;
+              }
+              existingStems.add(ns);
+              addedForCh.push({
+                ...q,
+                id: nextId++,
+                chapterId: q.chapterId && CHAPTERS.some(c => c.id === q.chapterId) ? q.chapterId : chId,
+                chapterName: q.chapterName || chName
+              });
+            });
+            if (addedForCh.length > 0) {
+              // Group by chapterId
+              const byCh = {};
+              addedForCh.forEach(q => {
+                if (!byCh[q.chapterId]) byCh[q.chapterId] = { id: q.chapterId, name: q.chapterName, count: 0 };
+                byCh[q.chapterId].count++;
+              });
+              Object.values(byCh).forEach(c => {
+                const exist = custom.chapters.find(x => x.id === c.id);
+                if (exist) exist.count += c.count;
+                else if (!BASE_CHAPTERS.some(x => x.id === c.id)) custom.chapters.push(c);
+                state.selectedChapters.add(c.id);
+              });
+              custom.questions.push(...addedForCh);
+              addedTotal += addedForCh.length;
+            }
+          } catch (e) {
+            statusEl.textContent = `解析 ${file.name} 失败：JSON 格式有误`;
+            return;
+          }
+        } else {
+          const res = parseChaoxingHtml(text, file.name.replace(/\.(html?|HTML?)$/, ''));
+          const addedForCh = [];
+          res.questions.forEach(q => {
+            const ns = normStem(q.stem);
+            if (!ns || existingStems.has(ns)) {
+              skippedTotal++;
+              return;
+            }
+            existingStems.add(ns);
+            addedForCh.push({ ...q, id: nextId++ });
+          });
+          if (addedForCh.length > 0) {
+            custom.chapters.push({ id: res.chId, name: res.chName, count: addedForCh.length });
+            custom.questions.push(...addedForCh);
+            state.selectedChapters.add(res.chId);
+            addedTotal += addedForCh.length;
+          }
+        }
+      }
+
+      CHAPTERS = [...BASE_CHAPTERS, ...custom.chapters];
+      ALL_QUESTIONS = [...BASE_QUESTIONS, ...custom.questions];
+      saveCustomBank(custom.chapters, custom.questions);
+      statusEl.textContent = `导入完成：新增 ${addedTotal} 题，自动跳过 ${skippedTotal} 道重复题目。`;
+      buildDeck(false);
+    }
+
+    document.getElementById('btnOpenImport').addEventListener('click', () => {
+      document.getElementById('importModal').classList.remove('hidden');
+    });
+    document.getElementById('btnCloseImport').addEventListener('click', () => {
+      document.getElementById('importModal').classList.add('hidden');
+    });
+    document.getElementById('btnDoneImport').addEventListener('click', () => {
+      document.getElementById('importModal').classList.add('hidden');
+    });
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleImportFiles(e.target.files);
+        e.target.value = '';
+      }
+    });
+    document.getElementById('btnExportJson').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify({ chapters: CHAPTERS, questions: ALL_QUESTIONS }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tax_law_questions_backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('已导出完整题库 JSON 备份');
+    });
+    document.getElementById('btnClearCustom').addEventListener('click', () => {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      CHAPTERS = [...BASE_CHAPTERS];
+      ALL_QUESTIONS = [...BASE_QUESTIONS];
+      state.selectedChapters = new Set(CHAPTERS.map(c => c.id));
+      document.getElementById('importStatus').classList.add('hidden');
+      buildDeck(false);
+      showToast('已清除本地导入的新题，恢复内置 199 题');
+    });
+
+    function renderFavButton() {
+      const q = state.deck[state.currentIndex];
+      const btn = document.getElementById('btnFavToggle');
+      const star = document.getElementById('favStarIcon');
+      const txt = document.getElementById('favBtnText');
+      if (!q || !btn) return;
+      const wrongBtn = document.getElementById('btnWrongRemove');
+      if (wrongBtn) wrongBtn.classList.toggle('hidden', !state.wrongBook.has(q.id));
+      const isFav = state.favorites.has(q.id);
+      if (isFav) {
+        btn.className = 'px-2.5 py-1 rounded-lg border border-amber-300 bg-amber-50 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition flex items-center gap-1';
+        star.textContent = '★';
+        txt.textContent = '已收藏';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition flex items-center gap-1';
+        star.textContent = '☆';
+        txt.textContent = '收藏';
+      }
+    }
+
+    document.getElementById('btnFavToggle').addEventListener('click', () => {
+      const q = state.deck[state.currentIndex];
+      if (q) toggleFavorite(q.id);
+    });
+    document.getElementById('btnWrongRemove').addEventListener('click', () => {
+      const q = state.deck[state.currentIndex];
+      if (q) removeWrongQuestion(q.id);
+    });
+
+    const PROGRESS_STORAGE_KEY = 'tax_law_quiz_progress_v1';
+    const GH_CFG_KEY = 'tax_law_quiz_gh_cfg_v1';
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify({
+          userAnswers: state.userAnswers,
+          submitted: state.submitted,
+          subAnswers: state.subAnswers
+        }));
+      } catch (e) {}
+    }
+
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem(PROGRESS_STORAGE_KEY);
+        if (!raw) return;
+        const p = JSON.parse(raw);
+        if (p && typeof p === 'object') {
+          state.userAnswers = p.userAnswers || {};
+          state.submitted = p.submitted || {};
+          state.subAnswers = p.subAnswers || {};
+        }
+      } catch (e) {}
+    }
+
+    function buildSyncPayload() {
+      return {
+        v: 2,
+        updatedAt: new Date().toISOString(),
+        favorites: [...state.favorites],
+        wrongBook: [...state.wrongBook]
+      };
+    }
+
+    function mergeSyncPayload(payload) {
+      if (!payload || typeof payload !== 'object') throw new Error('无效的同步数据');
+      const cloudFavs = Array.isArray(payload.favorites) ? payload.favorites : [];
+      const cloudWrong = Array.isArray(payload.wrongBook) ? payload.wrongBook : [];
+      let addedFavs = 0;
+      let addedWrong = 0;
+      cloudFavs.forEach(id => {
+        if (!state.favorites.has(id)) {
+          state.favorites.add(id);
+          addedFavs++;
+        }
+      });
+      cloudWrong.forEach(id => {
+        if (!state.wrongBook.has(id)) {
+          state.wrongBook.add(id);
+          addedWrong++;
+        }
+      });
+      saveFavorites();
+      saveWrongBook();
+      updateSyncSummary();
+      if (state.typeFilter === 'fav' || state.typeFilter === 'wrong') {
+        buildDeck(false);
+      } else {
+        renderStatsAndTypes();
+        renderFavButton();
+      }
+      return { addedFavs, addedWrong };
+    }
+
+    function updateSyncSummary() {
+      const ansEl = document.getElementById('syncAnsweredCount');
+      const favEl = document.getElementById('syncFavCount');
+      const wrongEl = document.getElementById('syncWrongCount');
+      if (ansEl) ansEl.textContent = ALL_QUESTIONS.filter(q => isQuestionSubmitted(q)).length;
+      if (favEl) favEl.textContent = state.favorites.size;
+      if (wrongEl) wrongEl.textContent = state.wrongBook.size;
+    }
+
+    function setSyncStatus(msg, isError = false) {
+      const el = document.getElementById('syncStatusMsg');
+      el.textContent = msg;
+      el.classList.remove('hidden', 'bg-slate-100', 'text-slate-700', 'bg-rose-50', 'text-rose-700', 'bg-emerald-50', 'text-emerald-700');
+      if (isError) el.classList.add('bg-rose-50', 'text-rose-700');
+      else el.classList.add('bg-emerald-50', 'text-emerald-700');
+    }
+
+    function loadGhConfig() {
+      try {
+        const raw = localStorage.getItem(GH_CFG_KEY);
+        if (!raw) return;
+        const cfg = JSON.parse(raw);
+        if (cfg.token) document.getElementById('ghTokenInput').value = cfg.token;
+        if (cfg.gistId) document.getElementById('ghGistIdInput').value = cfg.gistId;
+        document.getElementById('ghAutoSyncCheck').checked = !!cfg.autoSync;
+      } catch (e) {}
+    }
+
+    function saveGhConfig() {
+      try {
+        localStorage.setItem(GH_CFG_KEY, JSON.stringify({
+          token: document.getElementById('ghTokenInput').value.trim(),
+          gistId: document.getElementById('ghGistIdInput').value.trim(),
+          autoSync: document.getElementById('ghAutoSyncCheck').checked
+        }));
+      } catch (e) {}
+    }
+
+    let autoSyncTimer = null;
+    function maybeAutoSync() {
+      const auto = document.getElementById('ghAutoSyncCheck')?.checked;
+      const token = document.getElementById('ghTokenInput')?.value.trim();
+      if (!auto || !token) return;
+      clearTimeout(autoSyncTimer);
+      autoSyncTimer = setTimeout(() => pushToGist(true), 800);
+    }
+
+    async function pushToGist(silent = false) {
+      const token = document.getElementById('ghTokenInput').value.trim();
+      let gistId = document.getElementById('ghGistIdInput').value.trim();
+      if (!token) {
+        if (!silent) setSyncStatus('请先填写 GitHub Token', true);
+        return;
+      }
+      saveGhConfig();
+      try {
+        let mergedInfo = { addedFavs: 0, addedWrong: 0 };
+        if (gistId) {
+          const getRes = await fetch(`https://api.github.com/gists/${encodeURIComponent(gistId)}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/vnd.github+json'
+            }
+          });
+          if (!getRes.ok) throw new Error(`读取云端失败 HTTP ${getRes.status}`);
+          const getData = await getRes.json();
+          const cloudFile = getData.files && getData.files['tax_law_quiz_sync.json'];
+          if (cloudFile && cloudFile.content) {
+            mergedInfo = mergeSyncPayload(JSON.parse(cloudFile.content));
+          }
+        }
+        const body = {
+          description: 'Tax Law Quiz Sync Data (Favorites & Wrong Book)',
+          public: false,
+          files: {
+            'tax_law_quiz_sync.json': {
+              content: JSON.stringify(buildSyncPayload())
+            }
+          }
+        };
+        const url = gistId ? `https://api.github.com/gists/${encodeURIComponent(gistId)}` : 'https://api.github.com/gists';
+        const method = gistId ? 'PATCH' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.id && data.id !== gistId) {
+          document.getElementById('ghGistIdInput').value = data.id;
+          saveGhConfig();
+        }
+        if (!silent) {
+          setSyncStatus(`双向合并同步成功（存档 ID：${data.id}；从云端新增收藏 ${mergedInfo.addedFavs} 题、错题 ${mergedInfo.addedWrong} 题）`);
+        }
+      } catch (err) {
+        if (!silent) setSyncStatus(`同步失败：${err.message}，请检查 Token 权限（需勾选 gist）`, true);
+      }
+    }
+
+    async function pullFromGist() {
+      const token = document.getElementById('ghTokenInput').value.trim();
+      const gistId = document.getElementById('ghGistIdInput').value.trim();
+      if (!token || !gistId) {
+        setSyncStatus('合并需要同时填写 GitHub Token 和云端存档 ID', true);
+        return;
+      }
+      saveGhConfig();
+      try {
+        const res = await fetch(`https://api.github.com/gists/${encodeURIComponent(gistId)}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const file = data.files && data.files['tax_law_quiz_sync.json'];
+        if (!file || !file.content) throw new Error('未在存档中找到同步文件');
+        const info = mergeSyncPayload(JSON.parse(file.content));
+        setSyncStatus(`已从云端合并到本地（新增收藏 ${info.addedFavs} 题、错题 ${info.addedWrong} 题，本地原有记录已保留）`);
+      } catch (err) {
+        setSyncStatus(`合并失败：${err.message}`, true);
+      }
+    }
+
+    document.getElementById('btnOpenSync').addEventListener('click', () => {
+      updateSyncSummary();
+      document.getElementById('syncModal').classList.remove('hidden');
+    });
+    document.getElementById('btnCloseSync').addEventListener('click', () => {
+      document.getElementById('syncModal').classList.add('hidden');
+    });
+    document.getElementById('btnResetProgress').addEventListener('click', () => {
+      state.userAnswers = {};
+      state.submitted = {};
+      state.subAnswers = {};
+      saveProgress();
+      updateSyncSummary();
+      buildDeck(false);
+      showToast('已清空本地做题进度（保留收藏、错题本与新题）');
+    });
+    document.getElementById('btnCopySyncCode').addEventListener('click', async () => {
+      try {
+        const jsonStr = JSON.stringify(buildSyncPayload());
+        const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(b64);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = b64;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+        }
+        showToast('同步码已复制，可发送到其他设备粘贴导入');
+      } catch (e) {
+        showToast('复制失败，请重试');
+      }
+    });
+    document.getElementById('btnApplySyncCode').addEventListener('click', () => {
+      const code = document.getElementById('syncCodeInput').value.trim();
+      if (!code) {
+        setSyncStatus('请先粘贴同步码', true);
+        return;
+      }
+      try {
+        const jsonStr = decodeURIComponent(escape(atob(code)));
+        const info = mergeSyncPayload(JSON.parse(jsonStr));
+        document.getElementById('syncCodeInput').value = '';
+        setSyncStatus(`同步码合并成功（新增收藏 ${info.addedFavs} 题、错题 ${info.addedWrong} 题）`);
+      } catch (e) {
+        setSyncStatus('同步码格式有误，请确认完整粘贴', true);
+      }
+    });
+    document.getElementById('ghTokenInput').addEventListener('change', saveGhConfig);
+    document.getElementById('ghGistIdInput').addEventListener('change', saveGhConfig);
+    document.getElementById('ghAutoSyncCheck').addEventListener('change', saveGhConfig);
+    document.getElementById('btnGhPush').addEventListener('click', () => pushToGist(false));
+    document.getElementById('btnGhPull').addEventListener('click', pullFromGist);
+
+    // Initialize
+    loadFavorites();
+    loadWrongBook();
+    loadCustomBank();
+    loadProgress();
+    loadGhConfig();
+    buildDeck(false);
+  </script>
+</body>
+</html>
