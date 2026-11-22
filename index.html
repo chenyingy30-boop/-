@@ -40,7 +40,21 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <button id="btnToggleCalc" type="button" title="打开计算器" aria-label="打开计算器" class="p-1.5 sm:p-2 rounded-lg border border-amber-300 bg-amber-100 text-amber-600 hover:bg-amber-200 transition flex items-center justify-center">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="4" y="2" width="16" height="20" rx="2" />
+            <line x1="8" y1="6" x2="16" y2="6" />
+            <line x1="8" y1="10" x2="8.01" y2="10" />
+            <line x1="12" y1="10" x2="12.01" y2="10" />
+            <line x1="16" y1="10" x2="16.01" y2="10" />
+            <line x1="8" y1="14" x2="8.01" y2="14" />
+            <line x1="12" y1="14" x2="12.01" y2="14" />
+            <line x1="16" y1="14" x2="16.01" y2="14" />
+            <line x1="8" y1="18" x2="8.01" y2="18" />
+            <line x1="12" y1="18" x2="16" y2="18" />
+          </svg>
+        </button>
         <button id="btnOpenSync" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] transition">
           同步记录
         </button>
@@ -314,6 +328,66 @@
         </div>
         <div id="syncStatusMsg" class="hidden text-xs rounded-lg px-3 py-2 bg-slate-100 text-[#334155]"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Floating Expression Calculator -->
+  <div id="calcPanel" class="hidden fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] sm:w-88 max-w-sm bg-[#F6F8FB] rounded-2xl border border-[#CBD6E2] shadow-2xl flex flex-col overflow-hidden animate-fade-slide">
+    <div id="calcHeader" class="px-3.5 py-2.5 bg-[#1E3A5F] text-white flex items-center justify-between cursor-move select-none">
+      <div class="flex items-center gap-2">
+        <span class="text-xs sm:text-sm font-bold">税法计算器</span>
+        <span class="text-[11px] text-blue-100/80">支持括号与 %</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <button id="btnCalcClearHist" type="button" class="px-2 py-0.5 text-[11px] rounded bg-white/15 hover:bg-white/25 transition">清历史</button>
+        <button id="btnCloseCalc" type="button" class="w-6 h-6 rounded hover:bg-white/20 flex items-center justify-center text-xs transition">✕</button>
+      </div>
+    </div>
+
+    <!-- History (up to 5 recent) -->
+    <div id="calcHistory" class="hidden px-3 py-1.5 bg-[#EEF3F8] border-b border-[#DCE4EE] max-h-20 overflow-y-auto flex flex-col gap-0.5 text-xs text-[#475569]"></div>
+
+    <!-- Display & Input -->
+    <div class="p-3 bg-[#EEF3F8] border-b border-[#DCE4EE] flex flex-col gap-1.5">
+      <input id="calcExprInput" type="text" inputmode="text" autocomplete="off" placeholder="输入算式，如 (10000+500)/(1+13%)*13%" class="w-full px-2.5 py-2 text-sm font-mono rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]" />
+      <div class="flex items-center justify-between gap-2 px-1">
+        <span class="text-xs text-[#64748B]">结果</span>
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="calcResultText" class="text-lg font-bold font-mono text-[#1E3A5F] truncate">0</span>
+          <button id="btnCalcCopy" type="button" class="px-2 py-0.5 text-[11px] font-medium rounded border border-[#CBD6E2] bg-[#F6F8FB] text-[#334155] hover:bg-[#E2E9F2] shrink-0 transition">复制</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keypad -->
+    <div class="p-2.5 grid grid-cols-4 gap-1.5 text-sm font-semibold">
+      <button type="button" data-calc="AC" class="calc-key py-2 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">AC</button>
+      <button type="button" data-calc="(" class="calc-key py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">(</button>
+      <button type="button" data-calc=")" class="calc-key py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">)</button>
+      <button type="button" data-calc="BACK" class="calc-key py-2 rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">⌫</button>
+
+      <button type="button" data-calc="7" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">7</button>
+      <button type="button" data-calc="8" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">8</button>
+      <button type="button" data-calc="9" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">9</button>
+      <button type="button" data-calc="÷" class="calc-key py-2.5 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">÷</button>
+
+      <button type="button" data-calc="4" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">4</button>
+      <button type="button" data-calc="5" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">5</button>
+      <button type="button" data-calc="6" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">6</button>
+      <button type="button" data-calc="×" class="calc-key py-2.5 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">×</button>
+
+      <button type="button" data-calc="1" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">1</button>
+      <button type="button" data-calc="2" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">2</button>
+      <button type="button" data-calc="3" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">3</button>
+      <button type="button" data-calc="-" class="calc-key py-2.5 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">−</button>
+
+      <button type="button" data-calc="0" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">0</button>
+      <button type="button" data-calc="." class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">.</button>
+      <button type="button" data-calc="%" class="calc-key py-2.5 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">%</button>
+      <button type="button" data-calc="+" class="calc-key py-2.5 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">+</button>
+
+      <button type="button" data-calc="ANS" class="calc-key py-2 rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] text-xs transition">上次结果</button>
+      <button type="button" data-calc="=" class="calc-key col-span-3 py-2 rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">=</button>
     </div>
   </div>
 
@@ -1743,6 +1817,234 @@
     document.getElementById('ghAutoSyncCheck').addEventListener('change', saveGhConfig);
     document.getElementById('btnGhPush').addEventListener('click', () => pushToGist(false));
     document.getElementById('btnGhPull').addEventListener('click', pullFromGist);
+
+    // Safe Expression Calculator (supports (), +, -, *, /, %, decimals)
+    let calcLastAns = '0';
+    let calcHistoryList = [];
+
+    function evaluateMathExpr(raw) {
+      const s = raw
+        .replace(/\s+/g, '')
+        .replace(/,/g, '')
+        .replace(/（/g, '(')
+        .replace(/）/g, ')')
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/−/g, '-');
+      if (!s) return null;
+
+      let pos = 0;
+      function peek() { return s[pos]; }
+      function consume() { return s[pos++]; }
+
+      function parseExpr() {
+        let val = parseTerm();
+        while (peek() === '+' || peek() === '-') {
+          const op = consume();
+          const right = parseTerm();
+          val = op === '+' ? val + right : val - right;
+        }
+        return val;
+      }
+
+      function parseTerm() {
+        let val = parseFactor();
+        while (peek() === '*' || peek() === '/') {
+          const op = consume();
+          const right = parseFactor();
+          if (op === '/') {
+            if (right === 0) throw new Error('除数不能为0');
+            val = val / right;
+          } else {
+            val = val * right;
+          }
+        }
+        return val;
+      }
+
+      function parseFactor() {
+        if (peek() === '+') { consume(); return parseFactor(); }
+        if (peek() === '-') { consume(); return -parseFactor(); }
+        let val;
+        if (peek() === '(') {
+          consume();
+          val = parseExpr();
+          if (consume() !== ')') throw new Error('括号不匹配');
+        } else {
+          const start = pos;
+          while (pos < s.length && /[0-9.]/.test(s[pos])) pos++;
+          if (start === pos) throw new Error('算式格式有误');
+          val = Number(s.slice(start, pos));
+          if (Number.isNaN(val)) throw new Error('数字格式有误');
+        }
+        while (peek() === '%') {
+          consume();
+          val = val / 100;
+        }
+        return val;
+      }
+
+      const result = parseExpr();
+      if (pos !== s.length) throw new Error('算式格式有误');
+      if (!Number.isFinite(result)) throw new Error('结果超出范围');
+      return result;
+    }
+
+    function formatCalcNum(num) {
+      const rounded = Math.round(num * 1e8) / 1e8;
+      if (Number.isInteger(rounded)) return String(rounded);
+      return String(rounded);
+    }
+
+    function updateCalcPreview() {
+      const expr = document.getElementById('calcExprInput').value;
+      const resEl = document.getElementById('calcResultText');
+      if (!expr.trim()) {
+        resEl.textContent = '0';
+        resEl.className = 'text-lg font-bold font-mono text-[#1E3A5F] truncate';
+        return;
+      }
+      try {
+        const val = evaluateMathExpr(expr);
+        if (val !== null) {
+          resEl.textContent = formatCalcNum(val);
+          resEl.className = 'text-lg font-bold font-mono text-[#1E3A5F] truncate';
+        }
+      } catch (e) {
+        resEl.textContent = '...';
+        resEl.className = 'text-lg font-bold font-mono text-[#94A3B8] truncate';
+      }
+    }
+
+    function renderCalcHistory() {
+      const box = document.getElementById('calcHistory');
+      if (calcHistoryList.length === 0) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+      }
+      box.classList.remove('hidden');
+      box.innerHTML = '';
+      calcHistoryList.forEach(item => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'w-full text-left px-1.5 py-0.5 rounded hover:bg-[#E2E9F2] flex items-center justify-between gap-2 transition';
+        row.innerHTML = `<span class="font-mono truncate">${item.expr}</span><span class="font-mono font-semibold text-[#1E3A5F] shrink-0">= ${item.res}</span>`;
+        row.addEventListener('click', () => {
+          const inp = document.getElementById('calcExprInput');
+          inp.value = item.expr;
+          updateCalcPreview();
+        });
+        box.appendChild(row);
+      });
+    }
+
+    function commitCalcEqual() {
+      const inp = document.getElementById('calcExprInput');
+      const resEl = document.getElementById('calcResultText');
+      const expr = inp.value.trim();
+      if (!expr) return;
+      try {
+        const val = evaluateMathExpr(expr);
+        const formatted = formatCalcNum(val);
+        calcLastAns = formatted;
+        resEl.textContent = formatted;
+        resEl.className = 'text-lg font-bold font-mono text-[#1E3A5F] truncate';
+        calcHistoryList.unshift({ expr, res: formatted });
+        if (calcHistoryList.length > 5) calcHistoryList.pop();
+        renderCalcHistory();
+      } catch (e) {
+        resEl.textContent = e.message || '算式有误';
+        resEl.className = 'text-sm font-semibold text-rose-600 truncate';
+      }
+    }
+
+    function insertCalcToken(tok) {
+      const inp = document.getElementById('calcExprInput');
+      if (tok === 'AC') {
+        inp.value = '';
+        updateCalcPreview();
+        return;
+      }
+      if (tok === 'BACK') {
+        inp.value = inp.value.slice(0, -1);
+        updateCalcPreview();
+        return;
+      }
+      if (tok === '=') {
+        commitCalcEqual();
+        return;
+      }
+      if (tok === 'ANS') {
+        inp.value += calcLastAns;
+        updateCalcPreview();
+        return;
+      }
+      inp.value += tok;
+      updateCalcPreview();
+    }
+
+    document.getElementById('btnToggleCalc').addEventListener('click', () => {
+      const panel = document.getElementById('calcPanel');
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) {
+        document.getElementById('calcExprInput').focus();
+      }
+    });
+    document.getElementById('btnCloseCalc').addEventListener('click', () => {
+      document.getElementById('calcPanel').classList.add('hidden');
+    });
+    document.getElementById('btnCalcClearHist').addEventListener('click', () => {
+      calcHistoryList = [];
+      renderCalcHistory();
+    });
+    document.getElementById('calcExprInput').addEventListener('input', updateCalcPreview);
+    document.getElementById('calcExprInput').addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commitCalcEqual();
+      }
+    });
+    document.querySelectorAll('.calc-key').forEach(btn => {
+      btn.addEventListener('click', () => insertCalcToken(btn.dataset.calc));
+    });
+    document.getElementById('btnCalcCopy').addEventListener('click', async () => {
+      const val = document.getElementById('calcResultText').textContent;
+      if (!val || val === '...') return;
+      try {
+        await navigator.clipboard.writeText(val);
+        showToast(`已复制结果：${val}`);
+      } catch (e) {
+        showToast(`结果：${val}`);
+      }
+    });
+
+    // Make calculator draggable by header on desktop
+    (() => {
+      const panel = document.getElementById('calcPanel');
+      const header = document.getElementById('calcHeader');
+      let dragging = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
+      header.addEventListener('mousedown', (e) => {
+        if (e.target.tagName === 'BUTTON') return;
+        dragging = true;
+        const rect = panel.getBoundingClientRect();
+        panel.style.left = rect.left + 'px';
+        panel.style.top = rect.top + 'px';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        startX = e.clientX;
+        startY = e.clientY;
+        origLeft = rect.left;
+        origTop = rect.top;
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        panel.style.left = Math.max(8, Math.min(window.innerWidth - panel.offsetWidth - 8, origLeft + e.clientX - startX)) + 'px';
+        panel.style.top = Math.max(8, Math.min(window.innerHeight - panel.offsetHeight - 8, origTop + e.clientY - startY)) + 'px';
+      });
+      window.addEventListener('mouseup', () => { dragging = false; });
+    })();
 
     // Initialize
     loadFavorites();
