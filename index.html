@@ -332,62 +332,65 @@
   </div>
 
   <!-- Floating Expression Calculator -->
-  <div id="calcPanel" class="hidden fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] sm:w-88 max-w-sm bg-[#F6F8FB] rounded-2xl border border-[#CBD6E2] shadow-2xl flex flex-col overflow-hidden animate-fade-slide">
-    <div id="calcHeader" class="px-3.5 py-2.5 bg-[#1E3A5F] text-white flex items-center justify-between cursor-move select-none">
-      <div class="flex items-center gap-2">
-        <span class="text-xs sm:text-sm font-bold">税法计算器</span>
-        <span class="text-[11px] text-blue-100/80">支持括号与 %</span>
+  <div id="calcPanel" class="hidden fixed bottom-0 left-0 right-0 sm:bottom-4 sm:right-4 sm:left-auto z-40 w-full sm:w-84 sm:max-w-sm bg-[#F6F8FB] rounded-t-2xl sm:rounded-2xl border-t sm:border border-[#CBD6E2] shadow-2xl flex flex-col overflow-hidden animate-fade-slide">
+    <div id="calcHeader" class="px-3 py-1.5 sm:py-2 bg-[#1E3A5F] text-white flex items-center justify-between cursor-move select-none">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="text-xs font-bold shrink-0">计算器</span>
+        <span id="calcMiniResult" class="text-[11px] font-mono text-amber-200 truncate hidden"></span>
       </div>
-      <div class="flex items-center gap-1">
-        <button id="btnCalcClearHist" type="button" class="px-2 py-0.5 text-[11px] rounded bg-white/15 hover:bg-white/25 transition">清历史</button>
+      <div class="flex items-center gap-1 shrink-0">
+        <button id="btnCalcClearHist" type="button" class="px-1.5 py-0.5 text-[11px] rounded bg-white/15 hover:bg-white/25 transition">清历史</button>
+        <button id="btnCalcMin" type="button" title="折叠/展开" class="px-1.5 py-0.5 text-[11px] rounded bg-white/15 hover:bg-white/25 transition">收起</button>
         <button id="btnCloseCalc" type="button" class="w-6 h-6 rounded hover:bg-white/20 flex items-center justify-center text-xs transition">✕</button>
       </div>
     </div>
 
-    <!-- History (up to 5 recent) -->
-    <div id="calcHistory" class="hidden px-3 py-1.5 bg-[#EEF3F8] border-b border-[#DCE4EE] max-h-20 overflow-y-auto flex flex-col gap-0.5 text-xs text-[#475569]"></div>
+    <div id="calcBody" class="flex flex-col">
+      <!-- History (up to 5 recent) -->
+      <div id="calcHistory" class="hidden px-2.5 py-1 bg-[#EEF3F8] border-b border-[#DCE4EE] max-h-14 overflow-y-auto flex flex-col gap-0.5 text-[11px] text-[#475569]"></div>
 
-    <!-- Display & Input -->
-    <div class="p-3 bg-[#EEF3F8] border-b border-[#DCE4EE] flex flex-col gap-1.5">
-      <input id="calcExprInput" type="text" inputmode="text" autocomplete="off" placeholder="输入算式，如 (10000+500)/(1+13%)*13%" class="w-full px-2.5 py-2 text-sm font-mono rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]" />
-      <div class="flex items-center justify-between gap-2 px-1">
-        <span class="text-xs text-[#64748B]">结果</span>
-        <div class="flex items-center gap-2 min-w-0">
-          <span id="calcResultText" class="text-lg font-bold font-mono text-[#1E3A5F] truncate">0</span>
-          <button id="btnCalcCopy" type="button" class="px-2 py-0.5 text-[11px] font-medium rounded border border-[#CBD6E2] bg-[#F6F8FB] text-[#334155] hover:bg-[#E2E9F2] shrink-0 transition">复制</button>
+      <!-- Display & Input -->
+      <div class="px-2.5 py-1.5 sm:p-2.5 bg-[#EEF3F8] border-b border-[#DCE4EE] flex flex-col gap-1">
+        <input id="calcExprInput" type="text" inputmode="text" autocomplete="off" placeholder="输入算式，如 (10000+500)/(1+13%)*13%" class="w-full px-2 py-1 sm:py-1.5 text-xs sm:text-sm font-mono rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]" />
+        <div class="flex items-center justify-between gap-2 px-0.5">
+          <span class="text-[11px] text-[#64748B]">结果</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span id="calcResultText" class="text-base sm:text-lg font-bold font-mono text-[#1E3A5F] truncate">0</span>
+            <button id="btnCalcCopy" type="button" class="px-1.5 py-0.5 text-[11px] font-medium rounded border border-[#CBD6E2] bg-[#F6F8FB] text-[#334155] hover:bg-[#E2E9F2] shrink-0 transition">复制</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Keypad -->
-    <div class="p-2.5 grid grid-cols-4 gap-1.5 text-sm font-semibold">
-      <button type="button" data-calc="AC" class="calc-key py-2 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">AC</button>
-      <button type="button" data-calc="(" class="calc-key py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">(</button>
-      <button type="button" data-calc=")" class="calc-key py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">)</button>
-      <button type="button" data-calc="BACK" class="calc-key py-2 rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">⌫</button>
+      <!-- Compact Keypad -->
+      <div class="p-1.5 sm:p-2 grid grid-cols-4 gap-1 text-xs sm:text-sm font-semibold">
+        <button type="button" data-calc="AC" class="calc-key py-1.5 sm:py-2 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">AC</button>
+        <button type="button" data-calc="(" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">(</button>
+        <button type="button" data-calc=")" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">)</button>
+        <button type="button" data-calc="BACK" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">⌫</button>
 
-      <button type="button" data-calc="7" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">7</button>
-      <button type="button" data-calc="8" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">8</button>
-      <button type="button" data-calc="9" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">9</button>
-      <button type="button" data-calc="÷" class="calc-key py-2.5 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">÷</button>
+        <button type="button" data-calc="7" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">7</button>
+        <button type="button" data-calc="8" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">8</button>
+        <button type="button" data-calc="9" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">9</button>
+        <button type="button" data-calc="÷" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">÷</button>
 
-      <button type="button" data-calc="4" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">4</button>
-      <button type="button" data-calc="5" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">5</button>
-      <button type="button" data-calc="6" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">6</button>
-      <button type="button" data-calc="×" class="calc-key py-2.5 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">×</button>
+        <button type="button" data-calc="4" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">4</button>
+        <button type="button" data-calc="5" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">5</button>
+        <button type="button" data-calc="6" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">6</button>
+        <button type="button" data-calc="×" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">×</button>
 
-      <button type="button" data-calc="1" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">1</button>
-      <button type="button" data-calc="2" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">2</button>
-      <button type="button" data-calc="3" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">3</button>
-      <button type="button" data-calc="-" class="calc-key py-2.5 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">−</button>
+        <button type="button" data-calc="1" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">1</button>
+        <button type="button" data-calc="2" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">2</button>
+        <button type="button" data-calc="3" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">3</button>
+        <button type="button" data-calc="-" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">−</button>
 
-      <button type="button" data-calc="0" class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">0</button>
-      <button type="button" data-calc="." class="calc-key py-2.5 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">.</button>
-      <button type="button" data-calc="%" class="calc-key py-2.5 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">%</button>
-      <button type="button" data-calc="+" class="calc-key py-2.5 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">+</button>
+        <button type="button" data-calc="0" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">0</button>
+        <button type="button" data-calc="." class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">.</button>
+        <button type="button" data-calc="%" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">%</button>
+        <button type="button" data-calc="+" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">+</button>
 
-      <button type="button" data-calc="ANS" class="calc-key py-2 rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] text-xs transition">上次结果</button>
-      <button type="button" data-calc="=" class="calc-key col-span-3 py-2 rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">=</button>
+        <button type="button" data-calc="ANS" class="calc-key py-1.5 rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] text-[11px] sm:text-xs transition">上次结果</button>
+        <button type="button" data-calc="=" class="calc-key col-span-3 py-1.5 rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">=</button>
+      </div>
     </div>
   </div>
 
@@ -1984,15 +1987,41 @@
       updateCalcPreview();
     }
 
+    function updateMainCalcPadding() {
+      const mainEl = document.querySelector('main');
+      const panel = document.getElementById('calcPanel');
+      const bodyEl = document.getElementById('calcBody');
+      if (!mainEl || !panel) return;
+      const open = !panel.classList.contains('hidden') && !bodyEl.classList.contains('hidden');
+      mainEl.classList.toggle('pb-72', open);
+      mainEl.classList.toggle('sm:pb-5', open);
+    }
+
     document.getElementById('btnToggleCalc').addEventListener('click', () => {
       const panel = document.getElementById('calcPanel');
       panel.classList.toggle('hidden');
-      if (!panel.classList.contains('hidden')) {
+      updateMainCalcPadding();
+      if (!panel.classList.contains('hidden') && window.innerWidth >= 640) {
         document.getElementById('calcExprInput').focus();
       }
     });
     document.getElementById('btnCloseCalc').addEventListener('click', () => {
       document.getElementById('calcPanel').classList.add('hidden');
+      updateMainCalcPadding();
+    });
+    document.getElementById('btnCalcMin').addEventListener('click', () => {
+      const bodyEl = document.getElementById('calcBody');
+      const minBtn = document.getElementById('btnCalcMin');
+      const miniRes = document.getElementById('calcMiniResult');
+      const collapsed = bodyEl.classList.toggle('hidden');
+      minBtn.textContent = collapsed ? '展开' : '收起';
+      if (collapsed) {
+        miniRes.textContent = '= ' + (document.getElementById('calcResultText').textContent || '0');
+        miniRes.classList.remove('hidden');
+      } else {
+        miniRes.classList.add('hidden');
+      }
+      updateMainCalcPadding();
     });
     document.getElementById('btnCalcClearHist').addEventListener('click', () => {
       calcHistoryList = [];
