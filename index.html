@@ -4,35 +4,67 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>税法</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='9' fill='%231E3A5F'/%3E%3Cpath d='M18 7v20M11 12h14M11 12l-3 7a3.5 3.5 0 0 0 6 0l-3-7zm14 0l-3 7a3.5 3.5 0 0 0 6 0l-3-7zM14 27h8' stroke='%23FBBF24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E" />
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <style>
+    :root {
+      --bg-canvas: #E6ECF3;
+      --bg-surface: #F3F6FA;
+      --bg-card: #FAFBFD;
+      --border-hairline: #CFD9E6;
+      --accent-navy: #1E3A5F;
+      --accent-navy-hover: #162D4A;
+    }
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
-      background-color: #EBF0F5;
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+      background: radial-gradient(ellipse at 50% 0%, #F1F5FA 0%, #E4EBF2 70%);
+      background-color: var(--bg-canvas);
       color: #0F172A;
+      font-feature-settings: "tnum" 1, "cv05" 1;
+      -webkit-font-smoothing: antialiased;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .focal-card {
+      background-color: var(--bg-card);
+      border: 1px solid #C8D5E3;
+      box-shadow: 0 10px 30px -10px rgba(30, 58, 95, 0.10), 0 2px 6px -1px rgba(30, 58, 95, 0.04);
+    }
+    .sidebar-surface {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 2px 10px -4px rgba(30, 58, 95, 0.06);
     }
     .option-btn {
-      transition: all 0.15s ease;
+      transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s ease, box-shadow 0.14s ease;
     }
     .option-btn:not(:disabled):hover {
       transform: translateY(-1px);
+      box-shadow: 0 3px 10px -3px rgba(30, 58, 95, 0.10);
     }
     @keyframes fadeSlide {
-      from { opacity: 0; transform: translateY(6px); }
+      from { opacity: 0; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .animate-fade-slide {
-      animation: fadeSlide 0.2s ease-out forwards;
+      animation: fadeSlide 0.18s ease-out forwards;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .animate-fade-slide { animation: none; }
+      .option-btn:not(:disabled):hover { transform: none; }
     }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
   <!-- Top Header -->
-  <header class="bg-[#F6F8FB] border-b border-[#D4DEE8] sticky top-0 z-20">
+  <header class="bg-[#F4F7FB]/90 backdrop-blur-md border-b border-[#CFD9E6] sticky top-0 z-20 shadow-[0_1px_8px_-2px_rgba(30,58,95,0.06)]">
     <div class="w-full max-w-[1600px] mx-auto px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-9 h-9 rounded-lg bg-[#1E3A5F] text-white flex items-center justify-center font-bold text-sm shrink-0">
-          税法
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#132946] text-amber-300 shadow-xs border border-[#2C4F7C] flex items-center justify-center shrink-0" aria-hidden="true">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17M5 7h14M5 7l-2.5 5.5a3 3 0 005 0L5 7zm14 0l-2.5 5.5a3 3 0 005 0L19 7zM8.5 20h7"/>
+          </svg>
         </div>
         <div class="min-w-0">
           <h1 class="text-base sm:text-lg font-bold text-[#0F172A] truncate">税法</h1>
@@ -61,6 +93,7 @@
         <button id="btnOpenImport" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] transition">
           导入新题
         </button>
+        <span class="hidden sm:inline-block w-px h-5 bg-[#CBD6E2] mx-0.5"></span>
         <button id="btnToggleScope" type="button" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-[#CBD6E2] bg-[#EEF3F8] text-[#1E293B] hover:bg-[#E2E9F2] transition">
           选章节
         </button>
@@ -85,6 +118,7 @@
         <button type="button" data-type="判断题" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">判断题</button>
         <button type="button" data-type="多选题" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">多选题</button>
         <button type="button" data-type="阅读理解" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">阅读理解</button>
+        <div class="basis-full h-0"></div>
         <button type="button" data-type="fav" id="btnTypeFav" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">收藏夹 (0)</button>
         <button type="button" data-type="wrong" id="btnTypeWrong" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">错题本 (0)</button>
       </div>
@@ -99,7 +133,7 @@
     <!-- Search Bar -->
     <div class="w-full max-w-[1600px] mx-auto px-4 lg:px-6 pb-2.5 flex items-center gap-2">
       <div class="relative flex-1">
-        <input id="searchInput" type="text" placeholder="搜索题目/选项/解析/备注（支持 混*销售 模糊搜）..." class="w-full pl-8 pr-8 py-1.5 text-xs sm:text-sm rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]" />
+        <input id="searchInput" type="text" placeholder="搜索题目/选项/解析（支持 混*销售 模糊搜）..." class="w-full pl-8 pr-8 py-1.5 text-xs sm:text-sm rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]" />
         <svg class="w-3.5 h-3.5 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
         <button id="btnClearSearch" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[#64748B] hover:text-[#0F172A] px-1">✕</button>
       </div>
@@ -115,10 +149,10 @@
   <!-- Main Content (Full-width responsive 3-column on desktop, stacked on mobile) -->
   <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 lg:px-10 py-4 lg:py-5 flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-5">
     <!-- Left Sidebar: Chapter Scope & Type Filter -->
-    <aside id="scopePanel" class="w-full lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-[136px] bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] p-4 shadow-sm animate-fade-slide flex flex-col gap-3">
+    <aside id="scopePanel" class="w-full lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-[140px] sidebar-surface rounded-2xl p-4 animate-fade-slide flex flex-col gap-3">
       <div class="flex items-center justify-between gap-2">
         <h2 class="text-sm font-semibold text-[#1E293B]">章节与题型筛选</h2>
-        <button id="btnCollapseScope" type="button" class="px-2 py-0.5 text-xs rounded-md border border-[#CBD6E2] bg-[#EEF3F8] text-[#475569] hover:bg-[#E2E9F2] transition">收起</button>
+        <button id="btnCollapseScope" type="button" title="向左收起" class="px-2 py-0.5 text-xs rounded-md border border-[#CBD6E2] bg-[#EEF3F8] text-[#475569] hover:bg-[#E2E9F2] transition flex items-center gap-0.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg><span>收起</span></button>
       </div>
       <div class="flex flex-wrap items-center gap-1.5">
         <button type="button" id="btnScopeAll" class="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-[#334155] font-medium transition">全选</button>
@@ -130,13 +164,14 @@
 
       <!-- Desktop Type Filter inside Left Sidebar -->
       <div class="hidden lg:flex flex-col gap-2 pt-3 border-t border-[#DCE4EE]">
-        <div class="text-xs font-semibold text-[#64748B]">题型与专项筛选</div>
+        <div class="text-xs font-semibold text-[#64748B]">题型与专项筛选 <span class="font-normal text-[#94A3B8]">（题型可多选）</span></div>
         <div class="flex flex-wrap gap-1.5" id="sidebarTypeFilterGroup">
           <button type="button" data-type="all" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">全部</button>
           <button type="button" data-type="单选题" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">单选题</button>
           <button type="button" data-type="判断题" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">判断题</button>
           <button type="button" data-type="多选题" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">多选题</button>
           <button type="button" data-type="阅读理解" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">阅读理解</button>
+          <div class="basis-full h-0"></div>
           <button type="button" data-type="fav" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">收藏夹 (0)</button>
           <button type="button" data-type="wrong" class="type-btn px-2.5 py-1 text-xs font-medium rounded-md transition">错题本 (0)</button>
         </div>
@@ -198,7 +233,7 @@
     </section>
 
     <!-- Quiz Card -->
-    <section id="quizContainer" class="bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] shadow-sm p-5 sm:p-7 flex flex-col gap-5">
+    <section id="quizContainer" class="focal-card rounded-2xl p-5 sm:p-8 flex flex-col gap-5">
       <!-- Empty State -->
       <div id="emptyState" class="hidden py-10 text-center flex flex-col items-center gap-3">
         <div class="w-12 h-12 rounded-full bg-slate-100 text-[#64748B] flex items-center justify-center">
@@ -221,6 +256,9 @@
           </div>
           <div class="flex items-center gap-2">
             <span id="qOrigNum" class="text-xs text-[#94A3B8]">原题号 #1</span>
+            <button id="btnAskDoubao" type="button" title="复制题目并跳转到豆包（快捷键 Q）" class="px-2.5 py-1 rounded-lg border border-sky-200 bg-sky-50 text-xs font-medium text-sky-700 hover:bg-sky-100 transition flex items-center gap-1">
+              <span>问豆包</span><span class="hidden sm:inline text-[10px] opacity-70 font-mono">Q</span>
+            </button>
             <button id="btnFavToggle" type="button" class="px-2.5 py-1 rounded-lg border border-[#D4DEE8] text-xs font-medium text-[#475569] hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition flex items-center gap-1">
               <span id="favStarIcon">☆</span>
               <span id="favBtnText">收藏</span>
@@ -231,7 +269,7 @@
           </div>
         </div>
 
-        <h2 id="qStem" class="text-base sm:text-lg font-semibold text-[#0F172A] leading-relaxed whitespace-pre-line"></h2>
+        <h2 id="qStem" class="text-[16px] sm:text-[18px] font-semibold text-[#0F172A] leading-[1.75] tracking-[0.01em] whitespace-pre-line"></h2>
 
         <!-- Standard Options (Single / Judge / Multi) -->
         <div id="optionsContainer" class="flex flex-col gap-2.5"></div>
@@ -257,25 +295,25 @@
             <span id="feedbackCorrectAns" class="text-sm font-semibold"></span>
           </div>
           <p id="feedbackUserAns" class="text-xs sm:text-sm mb-2 hidden"></p>
-          <div id="feedbackAnalysisWrap" class="hidden mt-2 pt-2.5 border-t border-black/10 text-sm leading-relaxed whitespace-pre-line">
-            <span class="font-semibold">答案解析：</span><span id="feedbackAnalysis"></span>
-          </div>
-          <!-- User Note -->
-          <div id="userNoteSection" class="mt-2 pt-2 border-t border-black/10">
-            <div id="userNoteDisplay" class="hidden flex items-start justify-between gap-2 text-xs sm:text-sm text-[#1E293B]">
-              <div class="min-w-0 flex-1 leading-relaxed"><span class="font-semibold text-[#1E3A5F]">备注：</span><span id="userNoteContent" class="whitespace-pre-line"></span></div>
-              <button id="btnEditUserNote" type="button" class="text-xs text-[#1E3A5F] hover:underline shrink-0">编辑</button>
+          <div id="feedbackAnalysisWrap" class="mt-2 pt-2.5 border-t border-black/10 text-sm leading-relaxed">
+            <div id="feedbackAnalysisView" class="flex items-start justify-between gap-2">
+              <div class="min-w-0 flex-1 whitespace-pre-line">
+                <span class="font-semibold">答案解析：</span><span id="feedbackAnalysis" class="text-[#1E293B]"></span>
+              </div>
+              <button id="btnEditAnalysis" type="button" class="text-xs font-medium text-[#1E3A5F] hover:underline shrink-0">编辑</button>
             </div>
-            <button id="btnAddUserNote" type="button" class="text-xs font-medium text-[#1E3A5F] hover:underline">
-              + 备注
-            </button>
-            <div id="userNoteEditor" class="hidden flex items-center gap-1.5">
-              <input id="userNoteTextarea" type="text" placeholder="输入备注，按回车保存..." class="flex-1 px-2.5 py-1.5 text-xs sm:text-sm rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]" />
-              <button id="btnSaveUserNote" type="button" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] shrink-0 transition">保存</button>
-              <button id="btnDeleteUserNote" type="button" class="hidden px-2 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg shrink-0 transition">删</button>
-              <button id="btnCancelUserNote" type="button" class="px-2 py-1.5 text-xs text-[#64748B] hover:bg-[#E2E9F2] rounded-lg shrink-0 transition">取消</button>
+            <div id="feedbackAnalysisEditor" class="hidden flex flex-col gap-1.5 mt-1">
+              <textarea id="anaEditorTextarea" rows="3" placeholder="输入或补充答案解析，按回车保存（Shift+Enter 换行）..." class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]"></textarea>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <button id="btnResetAnalysis" type="button" class="hidden px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition">恢复原解析</button>
+                <div class="flex items-center gap-1.5 ml-auto">
+                  <button id="btnCancelAnalysis" type="button" class="px-2.5 py-1 text-xs text-[#64748B] hover:bg-[#E2E9F2] rounded-lg transition">取消</button>
+                  <button id="btnSaveAnalysis" type="button" class="px-3 py-1 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">保存解析</button>
+                </div>
+              </div>
             </div>
           </div>
+
         </div>
 
         <!-- Bottom Navigation -->
@@ -283,7 +321,7 @@
           <button id="btnPrev" type="button" class="px-4 py-2 rounded-xl border border-[#D4DEE8] text-sm font-medium text-[#334155] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
             ← 上一题
           </button>
-          <span class="hidden sm:inline text-xs text-[#94A3B8]">快捷键：A-E / 1-5 选答案 · ←/→ 切题</span>
+          <span class="hidden sm:inline text-xs text-[#94A3B8]">快捷键：A-E / 1-5 选答案 · ←/→ 切题 · Q 问豆包</span>
           <button id="btnNext" type="button" class="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-medium hover:bg-[#162d4a] disabled:opacity-40 disabled:cursor-not-allowed transition">
             下一题 →
           </button>
@@ -311,7 +349,6 @@
           <button type="button" data-sscope="stem" class="sscope-btn px-2.5 py-0.5 text-xs font-medium rounded-md bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">题目</button>
           <button type="button" data-sscope="options" class="sscope-btn px-2.5 py-0.5 text-xs font-medium rounded-md bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">选项</button>
           <button type="button" data-sscope="analysis" class="sscope-btn px-2.5 py-0.5 text-xs font-medium rounded-md bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">解析</button>
-          <button type="button" data-sscope="note" class="sscope-btn px-2.5 py-0.5 text-xs font-medium rounded-md bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">备注</button>
         </div>
       </div>
       <div id="searchResultsList" class="flex flex-col gap-3.5"></div>
@@ -319,18 +356,21 @@
     </div>
 
     <!-- Right Sidebar: Collapsible Question Card (Grouped by Type + Group Summary) -->
-    <aside id="questionCardPanel" class="hidden w-full lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-[136px] bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] p-4 shadow-sm animate-fade-slide flex flex-col gap-3">
+    <aside id="questionCardPanel" class="hidden w-full lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-[140px] sidebar-surface rounded-2xl p-4 animate-fade-slide flex flex-col gap-3">
       <div class="flex items-center justify-between gap-2">
-        <h2 class="text-sm font-semibold text-[#1E293B]">答题卡（按题型）</h2>
-        <button id="btnCollapseCard" type="button" class="px-2 py-0.5 text-xs rounded-md border border-[#CBD6E2] bg-[#EEF3F8] text-[#475569] hover:bg-[#E2E9F2] transition">收起</button>
+        <div class="flex items-center gap-1.5">
+          <h2 class="text-sm font-semibold text-[#1E293B]">答题卡</h2>
+          <button id="btnToggleOrderMode" type="button" title="点击切换：分题型 / 随机模式" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] shadow-xs transition">分题型</button>
+        </div>
+        <button id="btnCollapseCard" type="button" title="向右收起" class="px-2 py-0.5 text-xs rounded-md border border-[#CBD6E2] bg-[#EEF3F8] text-[#475569] hover:bg-[#E2E9F2] transition flex items-center gap-0.5"><span>收起</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
       </div>
       <div class="flex items-center gap-3 text-xs text-[#64748B]">
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>正确</span>
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>错误</span>
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span>未答</span>
       </div>
-      <div id="questionGrid" class="flex flex-col gap-3 max-h-64 lg:max-h-[calc(100vh-300px)] overflow-y-auto pr-0.5"></div>
-      <div id="cardSummaryFooter" class="pt-2.5 border-t border-[#DCE4EE] flex items-center justify-between text-xs font-medium text-[#334155]">
+      <div id="questionGrid" class="flex flex-col gap-3 max-h-64 lg:max-h-[calc(100vh-300px)] overflow-y-auto p-1.5"></div>
+      <div id="cardSummaryFooter" class="mt-1 rounded-xl bg-[#E9EFF6] border border-[#D4DEE8] px-3 py-2 flex items-center justify-between text-xs font-medium text-[#334155] tabular-nums">
         <span>本组已答：<strong id="cardGroupAnswered" class="text-[#0F172A]">0 / 0</strong></span>
         <span>本组正确：<strong id="cardGroupCorrect" class="text-emerald-700">0</strong></span>
       </div>
@@ -515,7 +555,7 @@
 
     const state = {
       selectedChapters: new Set(CHAPTERS.map(c => c.id)),
-      typeFilter: 'all',
+      typeFilters: new Set(['all']),
       deck: [],
       currentIndex: 0,
       userAnswers: {},     // { [id]: string[] } for single/judge/multi
@@ -523,12 +563,13 @@
       subAnswers: {},      // { [id]: { [subIdx]: string } } for 阅读理解
       favorites: new Set(),
       wrongBook: new Set(),
-      userNotes: {},
+      editedAnalysis: {},
       searchQuery: '',
       searchShowAllAns: false,
       searchScope: 'all',
       showScope: true,
       showCard: window.innerWidth >= 1024,
+      groupByType: true,
       examMode: false,
       examSubmitted: false,
       examReviewFilter: 'all',
@@ -606,41 +647,55 @@
       } catch (e) {}
     }
 
-    const NOTES_STORAGE_KEY = 'tax_law_quiz_notes_v1';
+    const EDITED_ANA_KEY = 'tax_law_quiz_edited_ana_v1';
 
-    function loadUserNotes() {
+    function loadEditedAnalysis() {
       try {
-        const raw = localStorage.getItem(NOTES_STORAGE_KEY);
+        const raw = localStorage.getItem(EDITED_ANA_KEY);
         if (raw) {
           const obj = JSON.parse(raw);
-          if (obj && typeof obj === 'object') state.userNotes = obj;
+          if (obj && typeof obj === 'object') state.editedAnalysis = obj;
         }
       } catch (e) {}
     }
 
-    function saveUserNotes() {
+    function saveEditedAnalysis() {
       try {
-        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(state.userNotes));
+        localStorage.setItem(EDITED_ANA_KEY, JSON.stringify(state.editedAnalysis));
       } catch (e) {}
     }
 
-    function renderUserNote(q) {
-      if (!q) return;
-      const disp = document.getElementById('userNoteDisplay');
-      const contentEl = document.getElementById('userNoteContent');
-      const addBtn = document.getElementById('btnAddUserNote');
-      const editor = document.getElementById('userNoteEditor');
-      if (!disp || !addBtn || !editor) return;
+    function getQuestionAnalysis(q) {
+      if (!q) return '';
+      if (Object.prototype.hasOwnProperty.call(state.editedAnalysis, q.id)) {
+        return state.editedAnalysis[q.id] || '';
+      }
+      return q.analysis || '';
+    }
 
+    function renderQuestionAnalysis(q, withTopBorder = true) {
+      const wrap = document.getElementById('feedbackAnalysisWrap');
+      const view = document.getElementById('feedbackAnalysisView');
+      const editor = document.getElementById('feedbackAnalysisEditor');
+      const anaEl = document.getElementById('feedbackAnalysis');
+      const editBtn = document.getElementById('btnEditAnalysis');
+      if (!wrap || !view || !editor || !anaEl) return;
+
+      wrap.className = withTopBorder
+        ? 'mt-2 pt-2.5 border-t border-black/10 text-sm leading-relaxed'
+        : 'text-sm leading-relaxed';
+      view.classList.remove('hidden');
       editor.classList.add('hidden');
-      const note = (state.userNotes[q.id] || '').trim();
-      if (note) {
-        contentEl.textContent = note;
-        disp.classList.remove('hidden');
-        addBtn.classList.add('hidden');
+
+      const txt = getQuestionAnalysis(q).trim();
+      if (txt) {
+        anaEl.textContent = txt;
+        anaEl.className = 'text-[#1E293B]';
+        if (editBtn) editBtn.textContent = '编辑';
       } else {
-        disp.classList.add('hidden');
-        addBtn.classList.remove('hidden');
+        anaEl.textContent = '暂无解析';
+        anaEl.className = 'text-[#94A3B8] italic';
+        if (editBtn) editBtn.textContent = '添加解析';
       }
     }
 
@@ -675,7 +730,7 @@
         state.wrongBook.delete(qId);
         saveWrongBook();
         showToast('已从错题本移除');
-        if (state.typeFilter === 'wrong') {
+        if (state.typeFilters.has('wrong')) {
           buildDeck(false);
         } else {
           renderStatsAndTypes();
@@ -694,7 +749,7 @@
       }
       saveFavorites();
       maybeAutoSync();
-      if (state.typeFilter === 'fav' && !state.favorites.has(qId)) {
+      if (state.typeFilters.has('fav') && !state.favorites.has(qId)) {
         buildDeck(false);
       } else {
         renderStatsAndTypes();
@@ -791,10 +846,7 @@
         }
       }
       if (scope === 'all' || scope === 'analysis') {
-        if (q.analysis) parts.push(q.analysis);
-      }
-      if (scope === 'all' || scope === 'note') {
-        if (state.userNotes[q.id]) parts.push(state.userNotes[q.id]);
+        const anaTxt = getQuestionAnalysis(q); if (anaTxt) parts.push(anaTxt);
       }
       const fullText = parts.join('\n');
       if (!fullText.trim()) return false;
@@ -807,12 +859,12 @@
     function getFilteredPool() {
       const scoped = getScopedQuestions();
       let pool = scoped;
-      if (state.typeFilter === 'fav') {
+      if (state.typeFilters.has('fav')) {
         pool = scoped.filter(q => state.favorites.has(q.id));
-      } else if (state.typeFilter === 'wrong') {
+      } else if (state.typeFilters.has('wrong')) {
         pool = scoped.filter(q => state.wrongBook.has(q.id));
-      } else if (state.typeFilter !== 'all') {
-        pool = scoped.filter(q => q.type === state.typeFilter);
+      } else if (!state.typeFilters.has('all')) {
+        pool = scoped.filter(q => state.typeFilters.has(q.type));
       }
       if (state.searchQuery && state.searchQuery.trim()) {
         pool = pool.filter(q => matchesSearchQuery(q, state.searchQuery));
@@ -820,12 +872,38 @@
       return pool;
     }
 
+    const TYPE_ORDER = ['单选题', '判断题', '多选题', '阅读理解'];
+
+    function orderDeck(pool) {
+      if (!state.groupByType) {
+        return shuffleArray(pool);
+      }
+      const result = [];
+      TYPE_ORDER.forEach(t => {
+        const sub = pool.filter(q => q.type === t);
+        if (sub.length > 0) result.push(...shuffleArray(sub));
+      });
+      const others = pool.filter(q => !TYPE_ORDER.includes(q.type));
+      if (others.length > 0) result.push(...shuffleArray(others));
+      return result;
+    }
+
+    function sortExamPool(pool) {
+      if (!state.groupByType) return pool;
+      const result = [];
+      TYPE_ORDER.forEach(t => {
+        result.push(...pool.filter(q => q.type === t));
+      });
+      result.push(...pool.filter(q => !TYPE_ORDER.includes(q.type)));
+      return result;
+    }
+
     function buildDeck(resetProgress = false) {
       if (state.examMode) {
         if (state.examSubmitted && state.examReviewFilter === 'wrong') {
-          state.deck = state.examPool.filter(q => !isQuestionCorrect(q));
+          state.deck = sortExamPool(state.examPool.filter(q => !isQuestionCorrect(q)));
         } else {
-          state.deck = [...state.examPool];
+          state.deck = sortExamPool([...state.examPool]);
         }
         state.currentIndex = 0;
         render();
@@ -836,7 +914,7 @@
         state.submitted = {};
         state.subAnswers = {};
       }
-      state.deck = shuffleArray(getFilteredPool());
+      state.deck = orderDeck(getFilteredPool());
       state.currentIndex = 0;
       render();
     }
@@ -850,7 +928,7 @@
       state.examMode = true;
       state.examSubmitted = false;
       state.examReviewFilter = 'all';
-      state.examPool = pool.slice(0, 20);
+      state.examPool = sortExamPool(pool.slice(0, 20));
       state.examAnswers = {};
       state.examSubAnswers = {};
       state.showScope = false;
@@ -1114,9 +1192,21 @@
         btn.textContent = labels[t];
         const disabled = (t !== 'all' && t !== 'fav' && t !== 'wrong' && counts[t] === 0);
         btn.disabled = disabled;
-        const active = state.typeFilter === t;
+        const active = state.typeFilters.has(t);
         if (disabled) {
           btn.className = 'type-btn px-2.5 py-1 text-xs font-medium rounded-md bg-slate-50 text-slate-300 cursor-not-allowed';
+        } else if (t === 'all') {
+          btn.className = active
+            ? 'type-btn px-2.5 py-1 text-xs font-semibold rounded-md bg-[#2563EB] text-white shadow-xs transition'
+            : 'type-btn px-2.5 py-1 text-xs font-semibold rounded-md border border-[#2563EB]/35 bg-blue-50 text-[#1D4ED8] hover:bg-blue-100 transition';
+        } else if (t === 'fav') {
+          btn.className = active
+            ? 'type-btn px-2.5 py-1 text-xs font-semibold rounded-md bg-amber-600 text-white shadow-xs transition'
+            : 'type-btn px-2.5 py-1 text-xs font-medium rounded-md border border-amber-200 bg-amber-50/70 text-amber-800 hover:bg-amber-100 transition';
+        } else if (t === 'wrong') {
+          btn.className = active
+            ? 'type-btn px-2.5 py-1 text-xs font-semibold rounded-md bg-rose-600 text-white shadow-xs transition'
+            : 'type-btn px-2.5 py-1 text-xs font-medium rounded-md border border-rose-200 bg-rose-50/70 text-rose-700 hover:bg-rose-100 transition';
         } else if (active) {
           btn.className = 'type-btn px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1E3A5F] text-white transition';
         } else {
@@ -1251,10 +1341,10 @@
         const subGrid = document.createElement('div');
         subGrid.className = 'grid grid-cols-7 sm:grid-cols-10 lg:grid-cols-5 gap-1.5';
 
-        items.forEach(({ q, idx }) => {
+        items.forEach(({ q, idx }, localIdx) => {
           const btn = document.createElement('button');
           btn.type = 'button';
-          btn.textContent = idx + 1;
+          btn.textContent = state.groupByType ? (localIdx + 1) : (idx + 1);
           const isCurrent = idx === state.currentIndex;
           const isSub = isQuestionSubmitted(q);
           const isRight = isSub && isQuestionCorrect(q);
@@ -1283,6 +1373,16 @@
         grid.appendChild(sec);
       });
 
+      const orderBtn = document.getElementById('btnToggleOrderMode');
+      if (orderBtn) {
+        if (state.groupByType) {
+          orderBtn.textContent = '分题型';
+          orderBtn.className = 'px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] shadow-xs transition';
+        } else {
+          orderBtn.textContent = '随机模式';
+          orderBtn.className = 'px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 bg-amber-100 text-amber-800 hover:bg-amber-200 shadow-xs transition';
+        }
+      }
       const ansEl = document.getElementById('cardGroupAnswered');
       const corrEl = document.getElementById('cardGroupCorrect');
       if (ansEl) ansEl.textContent = `${groupAnswered} / ${state.deck.length}`;
@@ -1306,7 +1406,7 @@
           document.getElementById('emptyTitle').textContent = '尚未选择任何章节';
           document.getElementById('emptyDesc').textContent = '请在上方勾选至少一个章节开始刷题。';
           document.getElementById('btnResetFilters').textContent = '全选所有章节';
-        } else if (state.typeFilter === 'fav') {
+        } else if (state.typeFilters.has('fav')) {
           document.getElementById('emptyTitle').textContent = '当前所选章节暂无收藏题目';
           document.getElementById('emptyDesc').textContent = '做题时点击题目右上角“☆ 收藏”即可加入收藏夹。';
           document.getElementById('btnResetFilters').textContent = '查看全部题目';
@@ -1314,7 +1414,7 @@
           document.getElementById('emptyTitle').textContent = '本次考试全部答对！';
           document.getElementById('emptyDesc').textContent = '20 道题没有错题，可以点击“全部”复盘或“再考一组”。';
           document.getElementById('btnResetFilters').textContent = '查看全部 20 题';
-        } else if (state.typeFilter === 'wrong') {
+        } else if (state.typeFilters.has('wrong')) {
           document.getElementById('emptyTitle').textContent = '当前所选章节暂无错题';
           document.getElementById('emptyDesc').textContent = '做题时答错的题目会自动收入错题本，方便随时重做。';
           document.getElementById('btnResetFilters').textContent = '查看全部题目';
@@ -1437,14 +1537,7 @@
           fbBox.className = 'rounded-xl p-4 border bg-slate-50 border-[#D4DEE8] text-[#1E293B] animate-fade-slide';
           document.getElementById('feedbackHeader').classList.add('hidden');
           document.getElementById('feedbackUserAns').classList.add('hidden');
-          const anaWrap = document.getElementById('feedbackAnalysisWrap');
-          if (q.analysis && q.analysis.trim()) {
-            document.getElementById('feedbackAnalysis').textContent = q.analysis;
-            anaWrap.className = 'text-sm leading-relaxed whitespace-pre-line';
-          } else {
-            anaWrap.classList.add('hidden');
-          }
-          renderUserNote(q);
+          renderQuestionAnalysis(q, false);
         } else {
           fbBox.classList.add('hidden');
         }
@@ -1543,15 +1636,7 @@
             userEl.classList.remove('hidden');
           }
 
-          const anaWrap = document.getElementById('feedbackAnalysisWrap');
-          const anaEl = document.getElementById('feedbackAnalysis');
-          if (q.analysis && q.analysis.trim()) {
-            anaEl.textContent = q.analysis;
-            anaWrap.className = 'mt-2 pt-2.5 border-t border-black/10 text-sm leading-relaxed whitespace-pre-line';
-          } else {
-            anaWrap.classList.add('hidden');
-          }
-          renderUserNote(q);
+          renderQuestionAnalysis(q, true);
         } else {
           fbBox.classList.add('hidden');
         }
@@ -1626,7 +1711,16 @@
           toggleFavorite(q.id);
           renderSearchResults();
         });
-        topRow.appendChild(favBtn);
+        const rightBtns = document.createElement('div');
+        rightBtns.className = 'flex items-center gap-1.5';
+        const dbBtn = document.createElement('button');
+        dbBtn.type = 'button';
+        dbBtn.className = 'px-2.5 py-1 rounded-lg border border-sky-200 bg-sky-50 text-xs font-medium text-sky-700 hover:bg-sky-100 transition';
+        dbBtn.textContent = '问豆包';
+        dbBtn.addEventListener('click', () => askDoubao(q));
+        rightBtns.appendChild(dbBtn);
+        rightBtns.appendChild(favBtn);
+        topRow.appendChild(rightBtns);
         card.appendChild(topRow);
 
         // Stem
@@ -1636,7 +1730,7 @@
         card.appendChild(stemEl);
 
         // Options or SubQuestions
-        const showAnsNow = state.searchShowAllAns || isQuestionSubmitted(q) || state.searchScope === 'analysis' || state.searchScope === 'note';
+        const showAnsNow = state.searchShowAllAns || isQuestionSubmitted(q) || state.searchScope === 'analysis';
 
         if (q.type === '阅读理解') {
           const sa = state.subAnswers[q.id] || {};
@@ -1740,24 +1834,17 @@
           if (q.type !== '阅读理解') {
             ansBox.innerHTML = `<div class="font-semibold text-emerald-700">正确答案：${escapeHtml(formatAnswerDisplay(q, q.answer))}</div>`;
           }
-          if (q.analysis && q.analysis.trim()) {
+          const effAna = getQuestionAnalysis(q);
+          if (effAna && effAna.trim()) {
             const anaDiv = document.createElement('div');
             anaDiv.className = 'text-xs sm:text-sm text-[#334155] whitespace-pre-line leading-relaxed';
             const anaHtml = (state.searchScope === 'all' || state.searchScope === 'analysis')
-              ? highlightText(q.analysis, state.searchQuery)
-              : escapeHtml(q.analysis);
+              ? highlightText(effAna, state.searchQuery)
+              : escapeHtml(effAna);
             anaDiv.innerHTML = `<span class="font-semibold">答案解析：</span>${anaHtml}`;
             ansBox.appendChild(anaDiv);
           }
-          if (state.userNotes[q.id]) {
-            const noteDiv = document.createElement('div');
-            noteDiv.className = 'text-xs sm:text-sm text-[#1E3A5F] pt-1 border-t border-black/10';
-            const noteHtml = (state.searchScope === 'all' || state.searchScope === 'note')
-              ? highlightText(state.userNotes[q.id], state.searchQuery)
-              : escapeHtml(state.userNotes[q.id]);
-            noteDiv.innerHTML = `<span class="font-semibold">备注：</span>${noteHtml}`;
-            ansBox.appendChild(noteDiv);
-          }
+
           card.appendChild(ansBox);
         }
 
@@ -1788,6 +1875,11 @@
     document.getElementById('btnCollapseScope').addEventListener('click', () => {
       state.showScope = false;
       renderScopePanel();
+    });
+    document.getElementById('btnToggleOrderMode').addEventListener('click', () => {
+      state.groupByType = !state.groupByType;
+      showToast(state.groupByType ? '已切换：按单选→判断→多选→阅读顺序，各从1编号' : '已切换：随机模式（全题型混排）');
+      buildDeck(false);
     });
     document.getElementById('btnCollapseCard').addEventListener('click', () => {
       state.showCard = false;
@@ -1839,14 +1931,35 @@
       if (state.selectedChapters.size === 0) {
         state.selectedChapters = new Set(CHAPTERS.map(c => c.id));
       }
-      state.typeFilter = 'all';
+      state.typeFilters = new Set(['all']);
       buildDeck(false);
     });
 
     document.querySelectorAll('.type-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.disabled) return;
-        state.typeFilter = btn.dataset.type;
+        const t = btn.dataset.type;
+        if (t === 'all') {
+          state.typeFilters = new Set(['all']);
+        } else if (t === 'fav' || t === 'wrong') {
+          if (state.typeFilters.has(t)) {
+            state.typeFilters = new Set(['all']);
+          } else {
+            state.typeFilters = new Set([t]);
+          }
+        } else {
+          state.typeFilters.delete('all');
+          state.typeFilters.delete('fav');
+          state.typeFilters.delete('wrong');
+          if (state.typeFilters.has(t)) {
+            state.typeFilters.delete(t);
+          } else {
+            state.typeFilters.add(t);
+          }
+          if (state.typeFilters.size === 0) {
+            state.typeFilters = new Set(['all']);
+          }
+        }
         buildDeck(false);
       });
     });
@@ -1873,6 +1986,9 @@
         } else if (state.currentIndex < state.deck.length - 1) {
           goToQuestion(state.currentIndex + 1);
         }
+      } else if (e.key.toUpperCase() === 'Q' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        askDoubao(q);
       } else if (q.type !== '阅读理解') {
         const upper = e.key.toUpperCase();
         const numMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D', '5': 'E' };
@@ -2171,6 +2287,38 @@
       showToast('已清除本地导入的新题，恢复内置 231 题');
     });
 
+    async function askDoubao(q) {
+      if (!q) return;
+      const lines = [`【${q.type}】${q.stem}`];
+      if (q.type === '阅读理解' && Array.isArray(q.subQuestions)) {
+        q.subQuestions.forEach(sq => {
+          lines.push(`\n${sq.subNum} ${sq.stem}`);
+          (sq.options || []).forEach(o => lines.push(`${o.letter}. ${o.text}`));
+        });
+      } else if (Array.isArray(q.options)) {
+        q.options.forEach(o => lines.push(`${o.letter}. ${o.text}`));
+      }
+      lines.push('\n请帮我详细解析这道税法题，说明正确答案及原因。');
+      const promptText = lines.join('\n');
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(promptText);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = promptText;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+        }
+        showToast('已复制题目，正在打开豆包（粘贴即可提问）');
+      } catch (e) {
+        showToast('正在打开豆包');
+      }
+      window.open('https://www.doubao.com/chat', '_blank', 'noopener');
+    }
+
     function renderFavButton() {
       const q = state.deck[state.currentIndex];
       const btn = document.getElementById('btnFavToggle');
@@ -2191,6 +2339,9 @@
       }
     }
 
+    document.getElementById('btnAskDoubao').addEventListener('click', () => {
+      askDoubao(state.deck[state.currentIndex]);
+    });
     document.getElementById('btnFavToggle').addEventListener('click', () => {
       const q = state.deck[state.currentIndex];
       if (q) toggleFavorite(q.id);
@@ -2232,7 +2383,7 @@
         updatedAt: new Date().toISOString(),
         favorites: [...state.favorites],
         wrongBook: [...state.wrongBook],
-        userNotes: state.userNotes
+        editedAnalysis: state.editedAnalysis
       };
     }
 
@@ -2254,18 +2405,18 @@
           addedWrong++;
         }
       });
-      if (payload.userNotes && typeof payload.userNotes === 'object') {
-        Object.entries(payload.userNotes).forEach(([qId, txt]) => {
-          if (typeof txt === 'string' && txt.trim() && !state.userNotes[qId]) {
-            state.userNotes[qId] = txt.trim();
+      if (payload.editedAnalysis && typeof payload.editedAnalysis === 'object') {
+        Object.entries(payload.editedAnalysis).forEach(([qId, txt]) => {
+          if (typeof txt === 'string' && txt.trim() && !Object.prototype.hasOwnProperty.call(state.editedAnalysis, qId)) {
+            state.editedAnalysis[qId] = txt.trim();
           }
         });
-        saveUserNotes();
+        saveEditedAnalysis();
       }
       saveFavorites();
       saveWrongBook();
       updateSyncSummary();
-      if (state.typeFilter === 'fav' || state.typeFilter === 'wrong') {
+      if (state.typeFilters.has('fav') || state.typeFilters.has('wrong')) {
         buildDeck(false);
       } else {
         renderStatsAndTypes();
@@ -2717,64 +2868,6 @@
 
     // Initialize
     loadFavorites();
-    document.getElementById('btnAddUserNote').addEventListener('click', () => {
-      const q = state.deck[state.currentIndex];
-      if (!q) return;
-      document.getElementById('btnAddUserNote').classList.add('hidden');
-      document.getElementById('userNoteDisplay').classList.add('hidden');
-      document.getElementById('btnDeleteUserNote').classList.add('hidden');
-      document.getElementById('userNoteTextarea').value = '';
-      document.getElementById('userNoteEditor').classList.remove('hidden');
-      document.getElementById('userNoteTextarea').focus();
-    });
-    document.getElementById('btnEditUserNote').addEventListener('click', () => {
-      const q = state.deck[state.currentIndex];
-      if (!q) return;
-      document.getElementById('btnAddUserNote').classList.add('hidden');
-      document.getElementById('userNoteDisplay').classList.add('hidden');
-      document.getElementById('btnDeleteUserNote').classList.remove('hidden');
-      document.getElementById('userNoteTextarea').value = state.userNotes[q.id] || '';
-      document.getElementById('userNoteEditor').classList.remove('hidden');
-      document.getElementById('userNoteTextarea').focus();
-    });
-    document.getElementById('btnCancelUserNote').addEventListener('click', () => {
-      renderUserNote(state.deck[state.currentIndex]);
-    });
-    function commitUserNote() {
-      const q = state.deck[state.currentIndex];
-      if (!q) return;
-      const val = document.getElementById('userNoteTextarea').value.trim();
-      if (val) {
-        state.userNotes[q.id] = val;
-        showToast('已保存备注');
-      } else {
-        delete state.userNotes[q.id];
-      }
-      saveUserNotes();
-      maybeAutoSync();
-      renderUserNote(q);
-    }
-
-    document.getElementById('btnSaveUserNote').addEventListener('click', commitUserNote);
-    document.getElementById('userNoteTextarea').addEventListener('keydown', (e) => {
-      e.stopPropagation();
-      if (e.key === 'Enter' && !e.isComposing) {
-        e.preventDefault();
-        commitUserNote();
-      } else if (e.key === 'Escape') {
-        renderUserNote(state.deck[state.currentIndex]);
-      }
-    });
-    document.getElementById('btnDeleteUserNote').addEventListener('click', () => {
-      const q = state.deck[state.currentIndex];
-      if (!q) return;
-      delete state.userNotes[q.id];
-      saveUserNotes();
-      maybeAutoSync();
-      renderUserNote(q);
-      showToast('已删除备注');
-    });
-
     let searchTimer = null;
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const val = e.target.value;
@@ -2816,7 +2909,53 @@
     });
 
     loadWrongBook();
-    loadUserNotes();
+    document.getElementById('btnEditAnalysis').addEventListener('click', () => {
+      const q = state.deck[state.currentIndex];
+      if (!q) return;
+      document.getElementById('feedbackAnalysisView').classList.add('hidden');
+      document.getElementById('feedbackAnalysisEditor').classList.remove('hidden');
+      document.getElementById('anaEditorTextarea').value = getQuestionAnalysis(q);
+      const hasOverride = Object.prototype.hasOwnProperty.call(state.editedAnalysis, q.id);
+      document.getElementById('btnResetAnalysis').classList.toggle('hidden', !hasOverride);
+      document.getElementById('anaEditorTextarea').focus();
+    });
+    document.getElementById('btnCancelAnalysis').addEventListener('click', () => {
+      const q = state.deck[state.currentIndex];
+      renderQuestionAnalysis(q, q && q.type !== '阅读理解');
+    });
+    function commitAnalysisEdit() {
+      const q = state.deck[state.currentIndex];
+      if (!q) return;
+      const val = document.getElementById('anaEditorTextarea').value.trim();
+      state.editedAnalysis[q.id] = val;
+      saveEditedAnalysis();
+      maybeAutoSync();
+      renderQuestionAnalysis(q, q.type !== '阅读理解');
+      showToast('已保存解析');
+    }
+
+    document.getElementById('btnSaveAnalysis').addEventListener('click', commitAnalysisEdit);
+    document.getElementById('anaEditorTextarea').addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        commitAnalysisEdit();
+      } else if (e.key === 'Escape') {
+        const q = state.deck[state.currentIndex];
+        renderQuestionAnalysis(q, q && q.type !== '阅读理解');
+      }
+    });
+    document.getElementById('btnResetAnalysis').addEventListener('click', () => {
+      const q = state.deck[state.currentIndex];
+      if (!q) return;
+      delete state.editedAnalysis[q.id];
+      saveEditedAnalysis();
+      maybeAutoSync();
+      renderQuestionAnalysis(q, q.type !== '阅读理解');
+      showToast('已恢复原解析');
+    });
+
+    loadEditedAnalysis();
     loadCustomBank();
     loadProgress();
     loadGhConfig();
