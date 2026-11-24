@@ -301,10 +301,10 @@
                 <span class="font-semibold text-[#0F172A]">答案解析：</span>
                 <button id="btnEditAnalysis" type="button" class="text-xs font-medium text-[#1E3A5F] hover:underline shrink-0">编辑</button>
               </div>
-              <div id="feedbackAnalysis" class="text-[#1E293B] whitespace-pre-line leading-relaxed"></div>
+              <div id="feedbackAnalysis" title="点击直接编辑解析" class="text-[#1E293B] whitespace-pre-line leading-relaxed cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition"></div>
             </div>
             <div id="feedbackAnalysisEditor" class="hidden flex flex-col gap-1.5 mt-1">
-              <textarea id="anaEditorTextarea" rows="3" placeholder="输入或补充答案解析，按回车保存（Shift+Enter 换行）..." class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]"></textarea>
+              <textarea id="anaEditorTextarea" rows="6" placeholder="输入或补充答案解析，按回车保存（Shift+Enter 换行）..." class="w-full min-h-[140px] max-h-[380px] resize-y px-3 py-2 text-xs sm:text-sm leading-relaxed rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]"></textarea>
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <button id="btnResetAnalysis" type="button" class="hidden px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition">恢复原解析</button>
                 <div class="flex items-center gap-1.5 ml-auto">
@@ -699,11 +699,11 @@
       const txt = getQuestionAnalysis(q).trim();
       if (txt) {
         anaEl.textContent = txt;
-        anaEl.className = 'text-[#1E293B]';
+        anaEl.className = 'text-[#1E293B] whitespace-pre-line leading-relaxed cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
         if (editBtn) editBtn.textContent = '编辑';
       } else {
-        anaEl.textContent = '暂无解析';
-        anaEl.className = 'text-[#94A3B8] italic';
+        anaEl.textContent = '暂无解析（点击此处直接添加）';
+        anaEl.className = 'text-[#94A3B8] italic cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
         if (editBtn) editBtn.textContent = '添加解析';
       }
     }
@@ -1557,17 +1557,20 @@
             subView.appendChild(subTop);
 
             const subContent = document.createElement('div');
-            subContent.className = subTxt ? 'text-[#1E293B] whitespace-pre-line leading-relaxed text-xs sm:text-sm' : 'text-[#94A3B8] italic text-xs';
-            subContent.textContent = subTxt || '暂无小题解析';
+            subContent.title = '点击直接编辑本小题解析';
+            subContent.className = subTxt
+              ? 'text-[#1E293B] whitespace-pre-line leading-relaxed text-xs sm:text-sm cursor-pointer rounded-md px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition'
+              : 'text-[#94A3B8] italic text-xs cursor-pointer rounded-md px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
+            subContent.textContent = subTxt || '暂无小题解析（点击此处直接添加）';
             subView.appendChild(subContent);
             subAnaBox.appendChild(subView);
 
             const subEditor = document.createElement('div');
             subEditor.className = 'hidden flex flex-col gap-1.5';
             const subTa = document.createElement('textarea');
-            subTa.rows = 2;
+            subTa.rows = 5;
             subTa.placeholder = '输入本小题解析，按回车保存（Shift+Enter 换行）...';
-            subTa.className = 'w-full px-2.5 py-1.5 text-xs sm:text-sm rounded-lg border border-[#CBD6E2] bg-white text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]';
+            subTa.className = 'w-full min-h-[110px] max-h-[340px] resize-y px-3 py-2 text-xs sm:text-sm leading-relaxed rounded-lg border border-[#CBD6E2] bg-white text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]';
             const subActions = document.createElement('div');
             subActions.className = 'flex items-center justify-end gap-1.5';
             const subCancel = document.createElement('button');
@@ -1598,17 +1601,25 @@
               showToast('已保存小题解析');
             }
 
-            subEditBtn.addEventListener('click', () => {
+            function openSubEditor() {
               subView.classList.add('hidden');
               subEditor.classList.remove('hidden');
               subTa.value = getSubQuestionAnalysis(q.id, sIdx, sq);
+              subTa.style.height = 'auto';
+              subTa.style.height = Math.min(340, Math.max(110, subTa.scrollHeight + 4)) + 'px';
               subTa.focus();
-            });
+            }
+            subEditBtn.addEventListener('click', openSubEditor);
+            subContent.addEventListener('click', openSubEditor);
             subCancel.addEventListener('click', () => {
               subEditor.classList.add('hidden');
               subView.classList.remove('hidden');
             });
             subSave.addEventListener('click', commitSubAna);
+            subTa.addEventListener('input', () => {
+              subTa.style.height = 'auto';
+              subTa.style.height = Math.min(340, Math.max(110, subTa.scrollHeight + 4)) + 'px';
+            });
             subTa.addEventListener('keydown', (e) => {
               e.stopPropagation();
               if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
@@ -3036,7 +3047,7 @@
     });
 
     loadWrongBook();
-    document.getElementById('btnEditAnalysis').addEventListener('click', () => {
+    function openMainAnalysisEditor() {
       const q = state.deck[state.currentIndex];
       if (!q) return;
       document.getElementById('feedbackAnalysisView').classList.add('hidden');
@@ -3044,8 +3055,12 @@
       document.getElementById('anaEditorTextarea').value = getQuestionAnalysis(q);
       const hasOverride = Object.prototype.hasOwnProperty.call(state.editedAnalysis, q.id);
       document.getElementById('btnResetAnalysis').classList.toggle('hidden', !hasOverride);
-      document.getElementById('anaEditorTextarea').focus();
-    });
+      const ta = document.getElementById('anaEditorTextarea');
+      autoGrowTextarea(ta);
+      ta.focus();
+    }
+    document.getElementById('btnEditAnalysis').addEventListener('click', openMainAnalysisEditor);
+    document.getElementById('feedbackAnalysis').addEventListener('click', openMainAnalysisEditor);
     document.getElementById('btnCancelAnalysis').addEventListener('click', () => {
       const q = state.deck[state.currentIndex];
       renderQuestionAnalysis(q, q && q.type !== '阅读理解');
@@ -3062,6 +3077,12 @@
     }
 
     document.getElementById('btnSaveAnalysis').addEventListener('click', commitAnalysisEdit);
+    function autoGrowTextarea(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = Math.min(380, Math.max(140, el.scrollHeight + 4)) + 'px';
+    }
+    document.getElementById('anaEditorTextarea').addEventListener('input', (e) => autoGrowTextarea(e.target));
     document.getElementById('anaEditorTextarea').addEventListener('keydown', (e) => {
       e.stopPropagation();
       if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
