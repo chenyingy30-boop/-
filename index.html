@@ -256,8 +256,8 @@
           </div>
           <div class="flex items-center gap-2">
             <span id="qOrigNum" class="text-xs text-[#94A3B8]">原题号 #1</span>
-            <button id="btnAskDoubao" type="button" title="复制题目并跳转到豆包（快捷键 Q）" class="px-2.5 py-1 rounded-lg border border-sky-200 bg-sky-50 text-xs font-medium text-sky-700 hover:bg-sky-100 transition flex items-center gap-1">
-              <span>问豆包</span><span class="hidden sm:inline text-[10px] opacity-70 font-mono">Q</span>
+            <button id="btnCopyQuestion" type="button" title="复制题目（快捷键 C，或未选中文字时按 Ctrl+C）" class="px-2.5 py-1 rounded-lg border border-[#D4DEE8] bg-[#EEF3F8] text-xs font-medium text-[#334155] hover:bg-[#E2E9F2] transition flex items-center gap-1">
+              <span>复制题目</span><span class="hidden sm:inline text-[10px] opacity-65 font-mono">C</span>
             </button>
             <button id="btnFavToggle" type="button" class="px-2.5 py-1 rounded-lg border border-[#D4DEE8] text-xs font-medium text-[#475569] hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition flex items-center gap-1">
               <span id="favStarIcon">☆</span>
@@ -296,11 +296,12 @@
           </div>
           <p id="feedbackUserAns" class="text-xs sm:text-sm mb-2 hidden"></p>
           <div id="feedbackAnalysisWrap" class="mt-2 pt-2.5 border-t border-black/10 text-sm leading-relaxed">
-            <div id="feedbackAnalysisView" class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1 whitespace-pre-line">
-                <span class="font-semibold">答案解析：</span><span id="feedbackAnalysis" class="text-[#1E293B]"></span>
+            <div id="feedbackAnalysisView" class="flex flex-col gap-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-semibold text-[#0F172A]">答案解析：</span>
+                <button id="btnEditAnalysis" type="button" class="text-xs font-medium text-[#1E3A5F] hover:underline shrink-0">编辑</button>
               </div>
-              <button id="btnEditAnalysis" type="button" class="text-xs font-medium text-[#1E3A5F] hover:underline shrink-0">编辑</button>
+              <div id="feedbackAnalysis" class="text-[#1E293B] whitespace-pre-line leading-relaxed"></div>
             </div>
             <div id="feedbackAnalysisEditor" class="hidden flex flex-col gap-1.5 mt-1">
               <textarea id="anaEditorTextarea" rows="3" placeholder="输入或补充答案解析，按回车保存（Shift+Enter 换行）..." class="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]"></textarea>
@@ -321,7 +322,7 @@
           <button id="btnPrev" type="button" class="px-4 py-2 rounded-xl border border-[#D4DEE8] text-sm font-medium text-[#334155] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
             ← 上一题
           </button>
-          <span class="hidden sm:inline text-xs text-[#94A3B8]">快捷键：A-E / 1-5 选答案 · ←/→ 切题 · Q 问豆包</span>
+          <span class="hidden sm:inline text-xs text-[#94A3B8]">快捷键：A-E / 1-5 选答案 · ←/→ 切题 · C 复制题目</span>
           <button id="btnNext" type="button" class="px-4 py-2 rounded-xl bg-[#1E3A5F] text-white text-sm font-medium hover:bg-[#162d4a] disabled:opacity-40 disabled:cursor-not-allowed transition">
             下一题 →
           </button>
@@ -671,6 +672,14 @@
         return state.editedAnalysis[q.id] || '';
       }
       return q.analysis || '';
+    }
+
+    function getSubQuestionAnalysis(qId, sIdx, sq) {
+      const key = `${qId}__sub_${sIdx}`;
+      if (Object.prototype.hasOwnProperty.call(state.editedAnalysis, key)) {
+        return state.editedAnalysis[key] || '';
+      }
+      return (sq && sq.analysis) ? sq.analysis : '';
     }
 
     function renderQuestionAnalysis(q, withTopBorder = true) {
@@ -1524,8 +1533,94 @@
             resLine.className = `text-xs font-semibold px-3 py-1.5 rounded-lg ${isSubRight ? 'bg-emerald-100/80 text-emerald-800' : 'bg-rose-100/80 text-rose-800'}`;
             resLine.textContent = isSubRight
               ? `✓ 回答正确（答案：${sq.answer}）`
-              : `✗ 回答错误，你的选择：${chosenLetter}，正确答案：${sq.answer}`;
+              : `✗ 回答错误，你的选择：${chosenLetter || '未作答'}，正确答案：${sq.answer}`;
             card.appendChild(resLine);
+
+            const subAnaBox = document.createElement('div');
+            subAnaBox.className = 'rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] p-2.5 text-xs sm:text-sm flex flex-col gap-1';
+
+            const subView = document.createElement('div');
+            subView.className = 'flex flex-col gap-1';
+            const subTop = document.createElement('div');
+            subTop.className = 'flex items-center justify-between gap-2';
+            const subLabel = document.createElement('span');
+            subLabel.className = 'font-semibold text-[#0F172A] text-xs';
+            subLabel.textContent = '小题解析：';
+            const subEditBtn = document.createElement('button');
+            subEditBtn.type = 'button';
+            subEditBtn.className = 'text-xs font-medium text-[#1E3A5F] hover:underline shrink-0';
+
+            const subTxt = getSubQuestionAnalysis(q.id, sIdx, sq).trim();
+            subEditBtn.textContent = subTxt ? '编辑' : '添加解析';
+            subTop.appendChild(subLabel);
+            subTop.appendChild(subEditBtn);
+            subView.appendChild(subTop);
+
+            const subContent = document.createElement('div');
+            subContent.className = subTxt ? 'text-[#1E293B] whitespace-pre-line leading-relaxed text-xs sm:text-sm' : 'text-[#94A3B8] italic text-xs';
+            subContent.textContent = subTxt || '暂无小题解析';
+            subView.appendChild(subContent);
+            subAnaBox.appendChild(subView);
+
+            const subEditor = document.createElement('div');
+            subEditor.className = 'hidden flex flex-col gap-1.5';
+            const subTa = document.createElement('textarea');
+            subTa.rows = 2;
+            subTa.placeholder = '输入本小题解析，按回车保存（Shift+Enter 换行）...';
+            subTa.className = 'w-full px-2.5 py-1.5 text-xs sm:text-sm rounded-lg border border-[#CBD6E2] bg-white text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]';
+            const subActions = document.createElement('div');
+            subActions.className = 'flex items-center justify-end gap-1.5';
+            const subCancel = document.createElement('button');
+            subCancel.type = 'button';
+            subCancel.className = 'px-2 py-1 text-xs text-[#64748B] hover:bg-[#E2E9F2] rounded-lg transition';
+            subCancel.textContent = '取消';
+            const subSave = document.createElement('button');
+            subSave.type = 'button';
+            subSave.className = 'px-2.5 py-1 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition';
+            subSave.textContent = '保存';
+            subActions.appendChild(subCancel);
+            subActions.appendChild(subSave);
+            subEditor.appendChild(subTa);
+            subEditor.appendChild(subActions);
+            subAnaBox.appendChild(subEditor);
+
+            const subKey = `${q.id}__sub_${sIdx}`;
+            function commitSubAna() {
+              const val = subTa.value.trim();
+              if (val) {
+                state.editedAnalysis[subKey] = val;
+              } else {
+                delete state.editedAnalysis[subKey];
+              }
+              saveEditedAnalysis();
+              maybeAutoSync();
+              renderQuestion();
+              showToast('已保存小题解析');
+            }
+
+            subEditBtn.addEventListener('click', () => {
+              subView.classList.add('hidden');
+              subEditor.classList.remove('hidden');
+              subTa.value = getSubQuestionAnalysis(q.id, sIdx, sq);
+              subTa.focus();
+            });
+            subCancel.addEventListener('click', () => {
+              subEditor.classList.add('hidden');
+              subView.classList.remove('hidden');
+            });
+            subSave.addEventListener('click', commitSubAna);
+            subTa.addEventListener('keydown', (e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+                e.preventDefault();
+                commitSubAna();
+              } else if (e.key === 'Escape') {
+                subEditor.classList.add('hidden');
+                subView.classList.remove('hidden');
+              }
+            });
+
+            card.appendChild(subAnaBox);
           }
 
           subEl.appendChild(card);
@@ -1713,12 +1808,13 @@
         });
         const rightBtns = document.createElement('div');
         rightBtns.className = 'flex items-center gap-1.5';
-        const dbBtn = document.createElement('button');
-        dbBtn.type = 'button';
-        dbBtn.className = 'px-2.5 py-1 rounded-lg border border-sky-200 bg-sky-50 text-xs font-medium text-sky-700 hover:bg-sky-100 transition';
-        dbBtn.textContent = '问豆包';
-        dbBtn.addEventListener('click', () => askDoubao(q));
-        rightBtns.appendChild(dbBtn);
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'px-2.5 py-1 rounded-lg border border-[#D4DEE8] bg-[#EEF3F8] text-xs font-medium text-[#334155] hover:bg-[#E2E9F2] transition';
+        copyBtn.textContent = '复制题目';
+        copyBtn.addEventListener('click', () => copyQuestionOnly(q));
+        rightBtns.appendChild(copyBtn);
+
         rightBtns.appendChild(favBtn);
         topRow.appendChild(rightBtns);
         card.appendChild(topRow);
@@ -1841,7 +1937,7 @@
             const anaHtml = (state.searchScope === 'all' || state.searchScope === 'analysis')
               ? highlightText(effAna, state.searchQuery)
               : escapeHtml(effAna);
-            anaDiv.innerHTML = `<span class="font-semibold">答案解析：</span>${anaHtml}`;
+            anaDiv.innerHTML = `<div class="font-semibold mb-0.5">答案解析：</div><div>${anaHtml}</div>`;
             ansBox.appendChild(anaDiv);
           }
 
@@ -1986,9 +2082,15 @@
         } else if (state.currentIndex < state.deck.length - 1) {
           goToQuestion(state.currentIndex + 1);
         }
-      } else if (e.key.toUpperCase() === 'Q' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      } else if (e.key.toUpperCase() === 'C' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        askDoubao(q);
+        copyQuestionOnly(q);
+      } else if (e.key.toUpperCase() === 'C' && (e.ctrlKey || e.metaKey) && !e.altKey) {
+        const sel = window.getSelection ? window.getSelection().toString() : '';
+        if (!sel) {
+          e.preventDefault();
+          copyQuestionOnly(q);
+        }
       } else if (q.type !== '阅读理解') {
         const upper = e.key.toUpperCase();
         const numMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D', '5': 'E' };
@@ -2287,8 +2389,7 @@
       showToast('已清除本地导入的新题，恢复内置 231 题');
     });
 
-    async function askDoubao(q) {
-      if (!q) return;
+    function formatQuestionPrompt(q) {
       const lines = [`【${q.type}】${q.stem}`];
       if (q.type === '阅读理解' && Array.isArray(q.subQuestions)) {
         q.subQuestions.forEach(sq => {
@@ -2299,24 +2400,50 @@
         q.options.forEach(o => lines.push(`${o.letter}. ${o.text}`));
       }
       lines.push('\n请帮我详细解析这道税法题，说明正确答案及原因。');
-      const promptText = lines.join('\n');
+      return lines.join('\n');
+    }
 
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(promptText);
-        } else {
-          const ta = document.createElement('textarea');
-          ta.value = promptText;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          ta.remove();
+    async function copyTextToClipboard(txt) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(txt);
+          return true;
+        } catch (err) {
+          // Fall through to execCommand fallback
         }
-        showToast('已复制题目，正在打开豆包（粘贴即可提问）');
-      } catch (e) {
-        showToast('正在打开豆包');
       }
-      window.open('https://www.doubao.com/chat', '_blank', 'noopener');
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '0';
+      ta.style.left = '0';
+      ta.style.width = '2em';
+      ta.style.height = '2em';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, txt.length);
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch (e) {
+        ok = false;
+      }
+      ta.remove();
+      if (!ok) throw new Error('copy failed');
+      return true;
+    }
+
+    async function copyQuestionOnly(q) {
+      if (!q) return;
+      try {
+        await copyTextToClipboard(formatQuestionPrompt(q));
+        showToast('已复制题目，可直接去豆包粘贴');
+      } catch (e) {
+        showToast('当前环境限制自动复制，请手动选中题干复制');
+      }
     }
 
     function renderFavButton() {
@@ -2339,8 +2466,8 @@
       }
     }
 
-    document.getElementById('btnAskDoubao').addEventListener('click', () => {
-      askDoubao(state.deck[state.currentIndex]);
+    document.getElementById('btnCopyQuestion').addEventListener('click', () => {
+      copyQuestionOnly(state.deck[state.currentIndex]);
     });
     document.getElementById('btnFavToggle').addEventListener('click', () => {
       const q = state.deck[state.currentIndex];
