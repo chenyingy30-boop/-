@@ -54,6 +54,17 @@
       .animate-fade-slide { animation: none; }
       .option-btn:not(:disabled):hover { transform: none; }
     }
+    /* Prevent distracting blinking text-caret when clicking options or buttons */
+    * {
+      caret-color: transparent;
+    }
+    input, textarea, [contenteditable="true"] {
+      caret-color: auto;
+    }
+    button, .option-btn, .calc-key {
+      user-select: none;
+      -webkit-user-select: none;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -193,10 +204,10 @@
             <div id="lpAccuracy" class="text-sm font-bold text-emerald-700">0%</div>
             <div class="text-[10px] text-[#64748B]">正确率</div>
           </div>
-          <div class="rounded-lg bg-[#EEF3F8] py-1.5 px-1">
+          <button id="btnLpWrongJump" type="button" title="点击直接进入错题本刷题" class="rounded-lg bg-[#EEF3F8] hover:bg-rose-50 hover:ring-1 hover:ring-rose-200 py-1.5 px-1 transition cursor-pointer">
             <div id="lpWrong" class="text-sm font-bold text-rose-600">0</div>
-            <div class="text-[10px] text-[#64748B]">错题本</div>
-          </div>
+            <div class="text-[10px] text-[#64748B]">错题本 ↗</div>
+          </button>
         </div>
       </div>
     </aside>
@@ -305,11 +316,22 @@
                 <button id="btnEditAnalysis" type="button" class="text-xs font-medium text-[#1E3A5F] hover:underline shrink-0">编辑</button>
               </div>
               <div id="feedbackAnalysis" title="点击直接编辑解析" class="text-[#1E293B] whitespace-pre-line leading-relaxed cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition"></div>
+              <div id="feedbackAnalysisImages" class="hidden flex flex-wrap gap-2 pt-1.5"></div>
             </div>
-            <div id="feedbackAnalysisEditor" class="hidden flex flex-col gap-1.5 mt-1">
-              <textarea id="anaEditorTextarea" rows="6" placeholder="输入或补充答案解析，按回车保存（Shift+Enter 换行）..." class="w-full min-h-[140px] max-h-[380px] resize-y px-3 py-2 text-xs sm:text-sm leading-relaxed rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]"></textarea>
+            <div id="feedbackAnalysisEditor" class="hidden flex flex-col gap-2 mt-1 rounded-xl p-1 transition">
+              <textarea id="anaEditorTextarea" rows="6" placeholder="输入或补充答案解析，可直接 Ctrl+V 粘贴截图或拖拽图片到此处，按回车保存（Shift+Enter 换行）..." class="w-full min-h-[140px] max-h-[380px] resize-y px-3 py-2 text-xs sm:text-sm leading-relaxed rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]"></textarea>
+              <div id="anaImagePreviews" class="hidden flex flex-wrap gap-2"></div>
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <button id="btnResetAnalysis" type="button" class="hidden px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition">恢复原解析</button>
+                <div class="flex items-center gap-1.5">
+                  <button id="btnHighlightAna" type="button" title="选中文字后点击标亮（快捷键 Ctrl+H）" class="px-2.5 py-1 text-xs font-medium rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition flex items-center gap-1">
+                    <span>标亮选中</span>
+                  </button>
+                  <button id="btnAddAnaImg" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg border border-[#CBD6E2] bg-[#F8FAFC] text-[#1E3A5F] hover:bg-[#E3ECF6] transition flex items-center gap-1">
+                    <span>+ 插入图片</span>
+                  </button>
+                  <input id="anaImgFileInput" type="file" accept="image/*" multiple class="hidden" />
+                  <button id="btnResetAnalysis" type="button" class="hidden px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition">恢复原解析</button>
+                </div>
                 <div class="flex items-center gap-1.5 ml-auto">
                   <button id="btnCancelAnalysis" type="button" class="px-2.5 py-1 text-xs text-[#64748B] hover:bg-[#E2E9F2] rounded-lg transition">取消</button>
                   <button id="btnSaveAnalysis" type="button" class="px-3 py-1 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">保存解析</button>
@@ -432,14 +454,35 @@
         <button id="btnCloseSync" type="button" class="w-8 h-8 rounded-lg text-[#94A3B8] hover:text-[#334155] hover:bg-slate-100 flex items-center justify-center transition">✕</button>
       </div>
 
-      <!-- Local Progress Summary -->
-      <div class="rounded-xl bg-[#EEF3F8] border border-[#D4DEE8] p-3.5 flex flex-wrap items-center justify-between gap-2">
-        <div class="text-xs sm:text-sm text-[#334155]">
-          本地已答 <strong id="syncAnsweredCount" class="text-[#0F172A]">0</strong> 题 · 收藏 <strong id="syncFavCount" class="text-amber-600">0</strong> 题 · 错题 <strong id="syncWrongCount" class="text-rose-600">0</strong> 题
+      <!-- Local Progress Summary & Partial Reset -->
+      <div class="rounded-xl bg-[#EEF3F8] border border-[#D4DEE8] p-3.5 flex flex-col gap-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="text-xs sm:text-sm text-[#334155]">
+            本地已答 <strong id="syncAnsweredCount" class="text-[#0F172A]">0</strong> 题 · 收藏 <strong id="syncFavCount" class="text-amber-600">0</strong> 题 · 错题 <strong id="syncWrongCount" class="text-rose-600">0</strong> 题
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button id="btnTogglePartialReset" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg border border-[#CBD6E2] bg-white text-[#1E3A5F] hover:bg-[#E3ECF6] transition">
+              清空部分记录
+            </button>
+            <button id="btnResetProgress" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
+              清空全部
+            </button>
+          </div>
         </div>
-        <button id="btnResetProgress" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
-          清空本地做题进度
-        </button>
+        <div id="partialResetPanel" class="hidden pt-2.5 border-t border-[#D4DEE8] flex flex-col gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-semibold text-[#1E293B]">选择要清空的做题进度（保留收藏与错题本）：</span>
+            <button id="btnResetCurrentScope" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">
+              仅清空当前筛选范围
+            </button>
+          </div>
+          <div id="resetChapterList" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-40 overflow-y-auto"></div>
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <button id="btnResetCheckedChapters" type="button" class="px-3 py-1 text-xs font-medium rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition">
+              清空所选章节记录
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Quick Code Sync -->
@@ -484,9 +527,11 @@
     </div>
   </div>
 
-  <!-- Floating Expression Calculator -->
-  <div id="calcPanel" class="hidden fixed bottom-0 left-0 right-0 sm:bottom-4 sm:right-4 sm:left-auto z-40 w-full sm:w-84 sm:max-w-sm bg-[#F6F8FB] rounded-t-2xl sm:rounded-2xl border-t sm:border border-[#CBD6E2] shadow-2xl flex flex-col overflow-hidden animate-fade-slide">
-    <div id="calcHeader" class="px-3 py-1.5 sm:py-2 bg-[#1E3A5F] text-white flex items-center justify-between cursor-move select-none">
+  <!-- Floating Expression Calculator (Auto-focus + Resizable) -->
+  <div id="calcPanel" class="hidden fixed bottom-0 left-0 right-0 sm:bottom-4 sm:right-4 sm:left-auto z-40 w-full sm:w-[340px] min-w-[260px] max-w-[96vw] max-h-[85vh] bg-[#F6F8FB] rounded-t-2xl sm:rounded-2xl border-t sm:border border-[#CBD6E2] shadow-2xl flex flex-col overflow-hidden animate-fade-slide">
+    <!-- Top-Left Resize Handle (Desktop) -->
+    <div id="calcResizeTL" title="拖拽调整大小" class="hidden sm:block absolute top-0 left-0 w-3.5 h-3.5 cursor-nwse-resize z-10"></div>
+    <div id="calcHeader" class="px-3 py-1.5 sm:py-2 bg-[#1E3A5F] text-white flex items-center justify-between cursor-move select-none shrink-0">
       <div class="flex items-center gap-2 min-w-0">
         <span class="text-xs font-bold shrink-0">计算器</span>
         <span id="calcMiniResult" class="text-[11px] font-mono text-amber-200 truncate hidden"></span>
@@ -498,7 +543,7 @@
       </div>
     </div>
 
-    <div id="calcBody" class="flex flex-col">
+    <div id="calcBody" class="flex-1 min-h-0 flex flex-col overflow-y-auto">
       <!-- History (up to 5 recent) -->
       <div id="calcHistory" class="hidden px-2.5 py-1 bg-[#EEF3F8] border-b border-[#DCE4EE] max-h-14 overflow-y-auto flex flex-col gap-0.5 text-[11px] text-[#475569]"></div>
 
@@ -514,37 +559,47 @@
         </div>
       </div>
 
-      <!-- Compact Keypad -->
-      <div class="p-1.5 sm:p-2 grid grid-cols-4 gap-1 text-xs sm:text-sm font-semibold">
-        <button type="button" data-calc="AC" class="calc-key py-1.5 sm:py-2 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">AC</button>
-        <button type="button" data-calc="(" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">(</button>
-        <button type="button" data-calc=")" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">)</button>
-        <button type="button" data-calc="BACK" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">⌫</button>
+      <!-- Compact Keypad (scales with panel size) -->
+      <div class="flex-1 min-h-[180px] p-1.5 sm:p-2 grid grid-cols-4 grid-rows-6 gap-1 text-xs sm:text-sm font-semibold">
+        <button type="button" data-calc="AC" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">AC</button>
+        <button type="button" data-calc="(" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">(</button>
+        <button type="button" data-calc=")" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">)</button>
+        <button type="button" data-calc="BACK" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] transition">⌫</button>
 
-        <button type="button" data-calc="7" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">7</button>
-        <button type="button" data-calc="8" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">8</button>
-        <button type="button" data-calc="9" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">9</button>
-        <button type="button" data-calc="÷" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">÷</button>
+        <button type="button" data-calc="7" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">7</button>
+        <button type="button" data-calc="8" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">8</button>
+        <button type="button" data-calc="9" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">9</button>
+        <button type="button" data-calc="÷" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">÷</button>
 
-        <button type="button" data-calc="4" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">4</button>
-        <button type="button" data-calc="5" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">5</button>
-        <button type="button" data-calc="6" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">6</button>
-        <button type="button" data-calc="×" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">×</button>
+        <button type="button" data-calc="4" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">4</button>
+        <button type="button" data-calc="5" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">5</button>
+        <button type="button" data-calc="6" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">6</button>
+        <button type="button" data-calc="×" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">×</button>
 
-        <button type="button" data-calc="1" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">1</button>
-        <button type="button" data-calc="2" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">2</button>
-        <button type="button" data-calc="3" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">3</button>
-        <button type="button" data-calc="-" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">−</button>
+        <button type="button" data-calc="1" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">1</button>
+        <button type="button" data-calc="2" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">2</button>
+        <button type="button" data-calc="3" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">3</button>
+        <button type="button" data-calc="-" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">−</button>
 
-        <button type="button" data-calc="0" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">0</button>
-        <button type="button" data-calc="." class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">.</button>
-        <button type="button" data-calc="%" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">%</button>
-        <button type="button" data-calc="+" class="calc-key py-1.5 sm:py-2 rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">+</button>
+        <button type="button" data-calc="0" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">0</button>
+        <button type="button" data-calc="." class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#F8FAFC] border border-[#D4DEE8] text-[#0F172A] hover:bg-[#E9EFF6] transition">.</button>
+        <button type="button" data-calc="%" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E6ECF2] text-[#1E3A5F] hover:bg-[#D7E0EA] transition">%</button>
+        <button type="button" data-calc="+" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E3ECF6] text-[#1E3A5F] hover:bg-[#d4e3f3] transition">+</button>
 
-        <button type="button" data-calc="ANS" class="calc-key py-1.5 rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] text-[11px] sm:text-xs transition">上次结果</button>
-        <button type="button" data-calc="=" class="calc-key col-span-3 py-1.5 rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">=</button>
+        <button type="button" data-calc="ANS" class="calc-key min-h-[26px] flex items-center justify-center rounded-lg bg-[#E6ECF2] text-[#334155] hover:bg-[#D7E0EA] text-[11px] sm:text-xs transition">上次结果</button>
+        <button type="button" data-calc="=" class="calc-key col-span-3 min-h-[26px] flex items-center justify-center rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition">=</button>
       </div>
     </div>
+    <!-- Bottom-Right Resize Grip -->
+    <div id="calcResizeBR" title="拖拽调整计算器大小" class="hidden sm:flex absolute bottom-0.5 right-0.5 w-4 h-4 cursor-nwse-resize items-end justify-end p-0.5 text-[#94A3B8] hover:text-[#1E3A5F] select-none z-10">
+      <svg class="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 5L5 11M11 8.5L8.5 11"/></svg>
+    </div>
+  </div>
+
+  <!-- Image Lightbox Modal -->
+  <div id="imgLightboxModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 cursor-zoom-out">
+    <button id="btnCloseLightbox" type="button" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center text-base transition">✕</button>
+    <img id="imgLightboxTarget" src="" alt="解析图片预览" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain" />
   </div>
 
   <!-- Toast -->
@@ -568,8 +623,11 @@
       favorites: new Set(),
       wrongBook: new Set(),
       editedAnalysis: {},
+      editedAnalysisImages: {},
       searchQuery: '',
       searchShowAllAns: false,
+      searchForceHideAnswered: false,
+      searchCardOverrides: {},
       searchScope: 'all',
       showScope: true,
       showCard: window.innerWidth >= 1024,
@@ -651,6 +709,171 @@
       } catch (e) {}
     }
 
+    const EDITED_ANA_IMG_KEY = 'tax_law_quiz_ana_imgs_v1';
+
+    function loadEditedAnalysisImages() {
+      try {
+        const raw = localStorage.getItem(EDITED_ANA_IMG_KEY);
+        if (raw) {
+          const obj = JSON.parse(raw);
+          if (obj && typeof obj === 'object') state.editedAnalysisImages = obj;
+        }
+      } catch (e) {}
+    }
+
+    function saveEditedAnalysisImages() {
+      try {
+        localStorage.setItem(EDITED_ANA_IMG_KEY, JSON.stringify(state.editedAnalysisImages));
+      } catch (e) {
+        showToast('图片总容量超出浏览器限制，请删除部分旧图后再试');
+      }
+    }
+
+    function openImageLightbox(src) {
+      const modal = document.getElementById('imgLightboxModal');
+      const img = document.getElementById('imgLightboxTarget');
+      if (!modal || !img) return;
+      img.src = src;
+      modal.classList.remove('hidden');
+    }
+
+    function compressImageFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('读取图片失败'));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('解析图片失败'));
+          img.onload = () => {
+            const maxW = 1000;
+            const scale = img.width > maxW ? (maxW / img.width) : 1;
+            const w = Math.max(1, Math.round(img.width * scale));
+            const h = Math.max(1, Math.round(img.height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.78));
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderViewImages(container, imgs) {
+      if (!container) return;
+      container.innerHTML = '';
+      if (!Array.isArray(imgs) || imgs.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+      container.classList.remove('hidden');
+      imgs.forEach((src, i) => {
+        const wrap = document.createElement('img');
+        wrap.src = src;
+        wrap.alt = `解析图片 ${i + 1}`;
+        wrap.title = '点击查看大图';
+        wrap.className = 'max-h-36 max-w-full rounded-lg border border-[#CBD6E2] bg-white object-contain cursor-zoom-in hover:opacity-95 transition shadow-xs';
+        wrap.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openImageLightbox(src);
+        });
+        container.appendChild(wrap);
+      });
+    }
+
+    function renderDraftImages(previewEl, draftArr) {
+      if (!previewEl) return;
+      previewEl.innerHTML = '';
+      if (!draftArr || draftArr.length === 0) {
+        previewEl.classList.add('hidden');
+        return;
+      }
+      previewEl.classList.remove('hidden');
+      draftArr.forEach((src, idx) => {
+        const box = document.createElement('div');
+        box.className = 'relative group';
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'h-20 w-auto max-w-[140px] rounded-lg border border-[#CBD6E2] bg-white object-contain cursor-zoom-in';
+        img.addEventListener('click', () => openImageLightbox(src));
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.textContent = '✕';
+        del.title = '移除图片';
+        del.className = 'absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center shadow hover:bg-rose-700 transition';
+        del.addEventListener('click', () => {
+          draftArr.splice(idx, 1);
+          renderDraftImages(previewEl, draftArr);
+        });
+        box.appendChild(img);
+        box.appendChild(del);
+        previewEl.appendChild(box);
+      });
+    }
+
+    async function handleImageFilesIntoDraft(files, draftArr, previewEl) {
+      const imgFiles = Array.from(files || []).filter(f => f && f.type && f.type.startsWith('image/'));
+      if (imgFiles.length === 0) return false;
+      for (const file of imgFiles) {
+        try {
+          const dataUrl = await compressImageFile(file);
+          draftArr.push(dataUrl);
+        } catch (err) {
+          showToast('图片处理失败，请重试');
+        }
+      }
+      renderDraftImages(previewEl, draftArr);
+      showToast(`已插入 ${imgFiles.length} 张图片（记得保存）`);
+      return true;
+    }
+
+    function bindImagePasteAndDrop(dropContainer, textareaEl, previewEl, getDraftArr) {
+      if (!dropContainer || !textareaEl) return;
+      textareaEl.addEventListener('paste', async (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        const files = [];
+        for (const item of items) {
+          if (item.kind === 'file' && item.type.startsWith('image/')) {
+            const f = item.getAsFile();
+            if (f) files.push(f);
+          }
+        }
+        if (files.length > 0) {
+          e.preventDefault();
+          await handleImageFilesIntoDraft(files, getDraftArr(), previewEl);
+        }
+      });
+
+      ['dragenter', 'dragover'].forEach(evt => {
+        dropContainer.addEventListener(evt, (e) => {
+          if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropContainer.classList.add('ring-2', 'ring-[#1E3A5F]', 'bg-[#E3ECF6]/40');
+          }
+        });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        dropContainer.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropContainer.classList.remove('ring-2', 'ring-[#1E3A5F]', 'bg-[#E3ECF6]/40');
+        });
+      });
+      dropContainer.addEventListener('drop', async (e) => {
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length > 0) {
+          await handleImageFilesIntoDraft(files, getDraftArr(), previewEl);
+        }
+      });
+    }
+
     const EDITED_ANA_KEY = 'tax_law_quiz_edited_ana_v1';
 
     function loadEditedAnalysis() {
@@ -700,15 +923,17 @@
       editor.classList.add('hidden');
 
       const txt = getQuestionAnalysis(q).trim();
+      const imgs = state.editedAnalysisImages[q.id] || [];
       if (txt) {
-        anaEl.textContent = txt;
+        anaEl.innerHTML = renderAnalysisRichText(txt);
         anaEl.className = 'text-[#1E293B] whitespace-pre-line leading-relaxed cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
         if (editBtn) editBtn.textContent = '编辑';
       } else {
-        anaEl.textContent = '暂无解析（点击此处直接添加）';
-        anaEl.className = 'text-[#94A3B8] italic cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
-        if (editBtn) editBtn.textContent = '添加解析';
+        anaEl.textContent = imgs.length > 0 ? '' : '暂无解析（点击此处直接添加，支持粘贴/拖拽截图）';
+        anaEl.className = imgs.length > 0 ? 'hidden' : 'text-[#94A3B8] italic cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
+        if (editBtn) editBtn.textContent = imgs.length > 0 ? '编辑' : '添加解析';
       }
+      renderViewImages(document.getElementById('feedbackAnalysisImages'), imgs);
     }
 
     const WRONG_STORAGE_KEY = 'tax_law_quiz_wrong_v1';
@@ -767,6 +992,53 @@
         renderStatsAndTypes();
         renderFavButton();
       }
+    }
+
+    function renderAnalysisRichText(text, searchQuery = '') {
+      const raw = String(text || '');
+      // Split on ==highlighted== spans
+      const parts = raw.split(/(==[\s\S]*?==)/g);
+      return parts.map(part => {
+        if (part.startsWith('==') && part.endsWith('==') && part.length > 4) {
+          const inner = part.slice(2, -2);
+          const innerHtml = searchQuery ? highlightText(inner, searchQuery) : escapeHtml(inner);
+          return `<mark class="bg-amber-200/90 text-[#0F172A] px-1 rounded font-semibold">${innerHtml}</mark>`;
+        }
+        return searchQuery ? highlightText(part, searchQuery) : escapeHtml(part);
+      }).join('');
+    }
+
+    function toggleHighlightSelection(ta) {
+      if (!ta) return;
+      const start = ta.selectionStart ?? 0;
+      const end = ta.selectionEnd ?? 0;
+      const val = ta.value;
+      if (start === end) {
+        showToast('请先用鼠标选中要标亮的文字（也可直接输入 ==重点==）');
+        ta.focus();
+        return;
+      }
+      const selected = val.slice(start, end);
+      let nextVal = '';
+      let nextStart = start;
+      let nextEnd = end;
+      // Toggle off if already wrapped
+      if (val.slice(Math.max(0, start - 2), start) === '==' && val.slice(end, end + 2) === '==') {
+        nextVal = val.slice(0, start - 2) + selected + val.slice(end + 2);
+        nextStart = start - 2;
+        nextEnd = end - 2;
+      } else if (selected.startsWith('==') && selected.endsWith('==') && selected.length > 4) {
+        const inner = selected.slice(2, -2);
+        nextVal = val.slice(0, start) + inner + val.slice(end);
+        nextEnd = start + inner.length;
+      } else {
+        nextVal = val.slice(0, start) + '==' + selected + '==' + val.slice(end);
+        nextStart = start + 2;
+        nextEnd = end + 2;
+      }
+      ta.value = nextVal;
+      ta.focus();
+      ta.setSelectionRange(nextStart, nextEnd);
     }
 
     function escapeHtml(str) {
@@ -1588,23 +1860,49 @@
             subTop.appendChild(subEditBtn);
             subView.appendChild(subTop);
 
+            const subKey = `${q.id}__sub_${sIdx}`;
+            const subImgs = state.editedAnalysisImages[subKey] || [];
+            if (subImgs.length > 0 && !subTxt) subEditBtn.textContent = '编辑';
+
             const subContent = document.createElement('div');
             subContent.title = '点击直接编辑本小题解析';
-            subContent.className = subTxt
-              ? 'text-[#1E293B] whitespace-pre-line leading-relaxed text-xs sm:text-sm cursor-pointer rounded-md px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition'
-              : 'text-[#94A3B8] italic text-xs cursor-pointer rounded-md px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
-            subContent.textContent = subTxt || '暂无小题解析（点击此处直接添加）';
+            if (subTxt) {
+              subContent.className = 'text-[#1E293B] whitespace-pre-line leading-relaxed text-xs sm:text-sm cursor-pointer rounded-md px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
+              subContent.innerHTML = renderAnalysisRichText(subTxt);
+            } else {
+              subContent.className = subImgs.length > 0
+                ? 'hidden'
+                : 'text-[#94A3B8] italic text-xs cursor-pointer rounded-md px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
+              subContent.textContent = '暂无小题解析（点击此处直接添加，支持粘贴/拖拽截图）';
+            }
             subView.appendChild(subContent);
+            const subImgView = document.createElement('div');
+            subImgView.className = 'hidden flex flex-wrap gap-2 pt-1';
+            renderViewImages(subImgView, subImgs);
+            subView.appendChild(subImgView);
             subAnaBox.appendChild(subView);
 
             const subEditor = document.createElement('div');
-            subEditor.className = 'hidden flex flex-col gap-1.5';
+            subEditor.className = 'hidden flex flex-col gap-1.5 rounded-lg p-0.5 transition';
             const subTa = document.createElement('textarea');
             subTa.rows = 5;
-            subTa.placeholder = '输入本小题解析，按回车保存（Shift+Enter 换行）...';
+            subTa.placeholder = '输入本小题解析，可 Ctrl+V 粘贴截图或拖拽图片，按回车保存...';
             subTa.className = 'w-full min-h-[110px] max-h-[340px] resize-y px-3 py-2 text-xs sm:text-sm leading-relaxed rounded-lg border border-[#CBD6E2] bg-white text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]';
+            const subDraftPrev = document.createElement('div');
+            subDraftPrev.className = 'hidden flex flex-wrap gap-2';
             const subActions = document.createElement('div');
-            subActions.className = 'flex items-center justify-end gap-1.5';
+            subActions.className = 'flex flex-wrap items-center justify-between gap-1.5';
+            const subImgBtn = document.createElement('button');
+            subImgBtn.type = 'button';
+            subImgBtn.className = 'px-2 py-1 text-xs font-medium rounded-lg border border-[#CBD6E2] bg-white text-[#1E3A5F] hover:bg-[#E3ECF6] transition';
+            subImgBtn.textContent = '+ 插入图片';
+            const subImgInp = document.createElement('input');
+            subImgInp.type = 'file';
+            subImgInp.accept = 'image/*';
+            subImgInp.multiple = true;
+            subImgInp.className = 'hidden';
+            const subRightAct = document.createElement('div');
+            subRightAct.className = 'flex items-center gap-1.5 ml-auto';
             const subCancel = document.createElement('button');
             subCancel.type = 'button';
             subCancel.className = 'px-2 py-1 text-xs text-[#64748B] hover:bg-[#E2E9F2] rounded-lg transition';
@@ -1613,13 +1911,31 @@
             subSave.type = 'button';
             subSave.className = 'px-2.5 py-1 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition';
             subSave.textContent = '保存';
-            subActions.appendChild(subCancel);
-            subActions.appendChild(subSave);
+            subRightAct.appendChild(subCancel);
+            subRightAct.appendChild(subSave);
+            const subHlBtn = document.createElement('button');
+            subHlBtn.type = 'button';
+            subHlBtn.title = '选中文字后点击标亮（Ctrl+H）';
+            subHlBtn.className = 'px-2 py-1 text-xs font-medium rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition';
+            subHlBtn.textContent = '标亮选中';
+            subHlBtn.addEventListener('click', () => toggleHighlightSelection(subTa));
+            subActions.appendChild(subHlBtn);
+            subActions.appendChild(subImgBtn);
+            subActions.appendChild(subImgInp);
+            subActions.appendChild(subRightAct);
             subEditor.appendChild(subTa);
+            subEditor.appendChild(subDraftPrev);
             subEditor.appendChild(subActions);
             subAnaBox.appendChild(subEditor);
 
-            const subKey = `${q.id}__sub_${sIdx}`;
+            let subDraftImgs = [];
+            subImgBtn.addEventListener('click', () => subImgInp.click());
+            subImgInp.addEventListener('change', async (e) => {
+              await handleImageFilesIntoDraft(e.target.files, subDraftImgs, subDraftPrev);
+              e.target.value = '';
+            });
+            bindImagePasteAndDrop(subEditor, subTa, subDraftPrev, () => subDraftImgs);
+
             function commitSubAna() {
               const val = subTa.value.trim();
               if (val) {
@@ -1627,7 +1943,13 @@
               } else {
                 delete state.editedAnalysis[subKey];
               }
+              if (subDraftImgs.length > 0) {
+                state.editedAnalysisImages[subKey] = [...subDraftImgs];
+              } else {
+                delete state.editedAnalysisImages[subKey];
+              }
               saveEditedAnalysis();
+              saveEditedAnalysisImages();
               maybeAutoSync();
               renderQuestion();
               showToast('已保存小题解析');
@@ -1637,6 +1959,8 @@
               subView.classList.add('hidden');
               subEditor.classList.remove('hidden');
               subTa.value = getSubQuestionAnalysis(q.id, sIdx, sq);
+              subDraftImgs = [...(state.editedAnalysisImages[subKey] || [])];
+              renderDraftImages(subDraftPrev, subDraftImgs);
               subTa.style.height = 'auto';
               subTa.style.height = Math.min(340, Math.max(110, subTa.scrollHeight + 4)) + 'px';
               subTa.focus();
@@ -1654,7 +1978,10 @@
             });
             subTa.addEventListener('keydown', (e) => {
               e.stopPropagation();
-              if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+              if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+                e.preventDefault();
+                toggleHighlightSelection(subTa);
+              } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
                 e.preventDefault();
                 commitSubAna();
               } else if (e.key === 'Escape') {
@@ -1826,6 +2153,12 @@
       };
 
       state.deck.forEach((q, idx) => {
+        const defaultShowAns = state.searchShowAllAns
+          || (!state.searchForceHideAnswered && (isQuestionSubmitted(q) || state.searchScope === 'analysis'));
+        const showAnsNow = Object.prototype.hasOwnProperty.call(state.searchCardOverrides, q.id)
+          ? !!state.searchCardOverrides[q.id]
+          : defaultShowAns;
+
         const card = document.createElement('div');
         card.className = 'bg-[#F6F8FB] rounded-2xl border border-[#D4DEE8] shadow-sm p-4 sm:p-5 flex flex-col gap-3';
 
@@ -1858,6 +2191,15 @@
         copyBtn.className = 'px-2.5 py-1 rounded-lg border border-[#D4DEE8] bg-[#EEF3F8] text-xs font-medium text-[#334155] hover:bg-[#E2E9F2] transition';
         copyBtn.textContent = '复制题目';
         copyBtn.addEventListener('click', () => copyQuestionOnly(q));
+        const toggleAnsBtn = document.createElement('button');
+        toggleAnsBtn.type = 'button';
+        toggleAnsBtn.className = 'px-2.5 py-1 rounded-lg border border-[#D4DEE8] bg-[#EEF3F8] text-xs font-medium text-[#1E3A5F] hover:bg-[#E2E9F2] transition';
+        toggleAnsBtn.textContent = showAnsNow ? '收起答案' : '展开答案';
+        toggleAnsBtn.addEventListener('click', () => {
+          state.searchCardOverrides[q.id] = !showAnsNow;
+          renderSearchResults();
+        });
+        rightBtns.appendChild(toggleAnsBtn);
         rightBtns.appendChild(copyBtn);
 
         rightBtns.appendChild(favBtn);
@@ -1871,7 +2213,6 @@
         card.appendChild(stemEl);
 
         // Options or SubQuestions
-        const showAnsNow = state.searchShowAllAns || isQuestionSubmitted(q) || state.searchScope === 'analysis';
 
         if (q.type === '阅读理解') {
           const sa = state.subAnswers[q.id] || {};
@@ -1884,7 +2225,7 @@
             subBox.appendChild(st);
 
             const chosenLetter = sa[sIdx];
-            const subDone = !!chosenLetter || state.searchShowAllAns;
+            const subDone = showAnsNow && (!!chosenLetter || state.searchShowAllAns || Object.prototype.hasOwnProperty.call(state.searchCardOverrides, q.id));
             sq.options.forEach(opt => {
               const btn = document.createElement('button');
               btn.type = 'button';
@@ -1902,6 +2243,7 @@
               btn.className = cls;
               btn.innerHTML = `<span class="font-bold shrink-0">${opt.letter}.</span><span class="flex-1">${highlightText(opt.text, state.searchQuery)}</span>`;
               btn.addEventListener('click', () => {
+                state.searchCardOverrides[q.id] = true;
                 selectSubOption(q.id, sIdx, opt.letter);
               });
               subBox.appendChild(btn);
@@ -1911,7 +2253,7 @@
         } else {
           const chosen = state.userAnswers[q.id] || [];
           const isSub = !!state.submitted[q.id];
-          const revealAns = isSub || state.searchShowAllAns;
+          const revealAns = showAnsNow;
           const corrSet = new Set(q.answer.split(''));
 
           const optsList = document.createElement('div');
@@ -1938,8 +2280,10 @@
             btn.innerHTML = `<span class="font-bold shrink-0">${opt.letter}.</span><span class="flex-1">${highlightText(opt.text, state.searchQuery)}</span>`;
             btn.addEventListener('click', () => {
               if (q.type !== '多选题') {
+                state.searchCardOverrides[q.id] = true;
                 state.userAnswers[q.id] = [opt.letter];
-                state.submitted[q.id] = true;
+                state.searchCardOverrides[q.id] = true;
+              state.submitted[q.id] = true;
                 saveProgress();
                 if (!isQuestionCorrect(q)) recordWrongQuestion(q.id);
               } else {
@@ -1968,24 +2312,158 @@
           }
         }
 
-        // Answer + Analysis + User Note footer
+        // Answer + Editable Analysis footer
         if (showAnsNow) {
           const ansBox = document.createElement('div');
-          ansBox.className = 'rounded-xl p-3 bg-[#EEF3F8] border border-[#D4DEE8] text-xs sm:text-sm text-[#1E293B] flex flex-col gap-1';
+          ansBox.className = 'rounded-xl p-3 bg-[#EEF3F8] border border-[#D4DEE8] text-xs sm:text-sm text-[#1E293B] flex flex-col gap-1.5';
           if (q.type !== '阅读理解') {
-            ansBox.innerHTML = `<div class="font-semibold text-emerald-700">正确答案：${escapeHtml(formatAnswerDisplay(q, q.answer))}</div>`;
-          }
-          const effAna = getQuestionAnalysis(q);
-          if (effAna && effAna.trim()) {
-            const anaDiv = document.createElement('div');
-            anaDiv.className = 'text-xs sm:text-sm text-[#334155] whitespace-pre-line leading-relaxed';
-            const anaHtml = (state.searchScope === 'all' || state.searchScope === 'analysis')
-              ? highlightText(effAna, state.searchQuery)
-              : escapeHtml(effAna);
-            anaDiv.innerHTML = `<div class="font-semibold mb-0.5">答案解析：</div><div>${anaHtml}</div>`;
-            ansBox.appendChild(anaDiv);
+            const corrLine = document.createElement('div');
+            corrLine.className = 'font-semibold text-emerald-700';
+            corrLine.textContent = `正确答案：${formatAnswerDisplay(q, q.answer)}`;
+            ansBox.appendChild(corrLine);
           }
 
+          const effAna = getQuestionAnalysis(q).trim();
+          const srImgs = state.editedAnalysisImages[q.id] || [];
+          const anaWrap = document.createElement('div');
+          anaWrap.className = 'flex flex-col gap-1 pt-1 border-t border-black/10';
+
+          const anaView = document.createElement('div');
+          anaView.className = 'flex flex-col gap-0.5';
+          const anaHeader = document.createElement('div');
+          anaHeader.className = 'flex items-center justify-between gap-2';
+          const anaLabel = document.createElement('span');
+          anaLabel.className = 'font-semibold text-[#0F172A] text-xs';
+          anaLabel.textContent = '答案解析：';
+          const anaEditBtn = document.createElement('button');
+          anaEditBtn.type = 'button';
+          anaEditBtn.className = 'text-xs font-medium text-[#1E3A5F] hover:underline shrink-0';
+          anaEditBtn.textContent = (effAna || srImgs.length > 0) ? '编辑' : '添加解析';
+          anaHeader.appendChild(anaLabel);
+          anaHeader.appendChild(anaEditBtn);
+          anaView.appendChild(anaHeader);
+
+          const anaTextEl = document.createElement('div');
+          anaTextEl.title = '点击直接编辑解析';
+          if (effAna) {
+            anaTextEl.className = 'text-xs sm:text-sm text-[#334155] whitespace-pre-line leading-relaxed cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
+            anaTextEl.innerHTML = renderAnalysisRichText(effAna);
+          } else {
+            anaTextEl.className = srImgs.length > 0
+              ? 'hidden'
+              : 'text-xs text-[#94A3B8] italic cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 hover:bg-black/5 transition';
+            anaTextEl.textContent = '暂无解析（点击此处直接添加，支持粘贴/拖拽截图）';
+          }
+          anaView.appendChild(anaTextEl);
+          const srImgView = document.createElement('div');
+          srImgView.className = 'hidden flex flex-wrap gap-2 pt-1';
+          renderViewImages(srImgView, srImgs);
+          anaView.appendChild(srImgView);
+          anaWrap.appendChild(anaView);
+
+          const anaEditor = document.createElement('div');
+          anaEditor.className = 'hidden flex flex-col gap-1.5 rounded-lg p-0.5 transition';
+          const anaTa = document.createElement('textarea');
+          anaTa.rows = 5;
+          anaTa.placeholder = '输入或补充答案解析，可 Ctrl+V 粘贴截图或拖拽图片，按回车保存...';
+          anaTa.className = 'w-full min-h-[120px] max-h-[340px] resize-y px-2.5 py-2 text-xs sm:text-sm leading-relaxed rounded-lg border border-[#CBD6E2] bg-white text-[#0F172A] focus:outline-none focus:border-[#1E3A5F]';
+          const srDraftPrev = document.createElement('div');
+          srDraftPrev.className = 'hidden flex flex-wrap gap-2';
+          const anaBtns = document.createElement('div');
+          anaBtns.className = 'flex flex-wrap items-center justify-between gap-1.5';
+          const srImgBtn = document.createElement('button');
+          srImgBtn.type = 'button';
+          srImgBtn.className = 'px-2 py-1 text-xs font-medium rounded-lg border border-[#CBD6E2] bg-white text-[#1E3A5F] hover:bg-[#E3ECF6] transition';
+          srImgBtn.textContent = '+ 插入图片';
+          const srImgInp = document.createElement('input');
+          srImgInp.type = 'file';
+          srImgInp.accept = 'image/*';
+          srImgInp.multiple = true;
+          srImgInp.className = 'hidden';
+          const srRightBtns = document.createElement('div');
+          srRightBtns.className = 'flex items-center gap-1.5 ml-auto';
+          const anaCancel = document.createElement('button');
+          anaCancel.type = 'button';
+          anaCancel.className = 'px-2.5 py-1 text-xs text-[#64748B] hover:bg-[#E2E9F2] rounded-lg transition';
+          anaCancel.textContent = '取消';
+          const anaSave = document.createElement('button');
+          anaSave.type = 'button';
+          anaSave.className = 'px-2.5 py-1 text-xs font-medium rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] transition';
+          anaSave.textContent = '保存';
+          srRightBtns.appendChild(anaCancel);
+          srRightBtns.appendChild(anaSave);
+          const srHlBtn = document.createElement('button');
+          srHlBtn.type = 'button';
+          srHlBtn.title = '选中文字后点击标亮（Ctrl+H）';
+          srHlBtn.className = 'px-2 py-1 text-xs font-medium rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition';
+          srHlBtn.textContent = '标亮选中';
+          srHlBtn.addEventListener('click', () => toggleHighlightSelection(anaTa));
+          anaBtns.appendChild(srHlBtn);
+          anaBtns.appendChild(srImgBtn);
+          anaBtns.appendChild(srImgInp);
+          anaBtns.appendChild(srRightBtns);
+          anaEditor.appendChild(anaTa);
+          anaEditor.appendChild(srDraftPrev);
+          anaEditor.appendChild(anaBtns);
+          anaWrap.appendChild(anaEditor);
+
+          let srDraftImgs = [];
+          srImgBtn.addEventListener('click', () => srImgInp.click());
+          srImgInp.addEventListener('change', async (e) => {
+            await handleImageFilesIntoDraft(e.target.files, srDraftImgs, srDraftPrev);
+            e.target.value = '';
+          });
+          bindImagePasteAndDrop(anaEditor, anaTa, srDraftPrev, () => srDraftImgs);
+
+          function openSearchAnaEditor() {
+            anaView.classList.add('hidden');
+            anaEditor.classList.remove('hidden');
+            anaTa.value = getQuestionAnalysis(q);
+            srDraftImgs = [...(state.editedAnalysisImages[q.id] || [])];
+            renderDraftImages(srDraftPrev, srDraftImgs);
+            anaTa.style.height = 'auto';
+            anaTa.style.height = Math.min(340, Math.max(120, anaTa.scrollHeight + 4)) + 'px';
+            anaTa.focus();
+          }
+          function commitSearchAna() {
+            state.editedAnalysis[q.id] = anaTa.value.trim();
+            if (srDraftImgs.length > 0) {
+              state.editedAnalysisImages[q.id] = [...srDraftImgs];
+            } else {
+              delete state.editedAnalysisImages[q.id];
+            }
+            saveEditedAnalysis();
+            saveEditedAnalysisImages();
+            maybeAutoSync();
+            renderSearchResults();
+            showToast('已保存解析');
+          }
+          anaEditBtn.addEventListener('click', openSearchAnaEditor);
+          anaTextEl.addEventListener('click', openSearchAnaEditor);
+          anaCancel.addEventListener('click', () => {
+            anaEditor.classList.add('hidden');
+            anaView.classList.remove('hidden');
+          });
+          anaSave.addEventListener('click', commitSearchAna);
+          anaTa.addEventListener('input', () => {
+            anaTa.style.height = 'auto';
+            anaTa.style.height = Math.min(340, Math.max(120, anaTa.scrollHeight + 4)) + 'px';
+          });
+          anaTa.addEventListener('keydown', (e) => {
+            e.stopPropagation();
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+              e.preventDefault();
+              toggleHighlightSelection(anaTa);
+            } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+              e.preventDefault();
+              commitSearchAna();
+            } else if (e.key === 'Escape') {
+              anaEditor.classList.add('hidden');
+              anaView.classList.remove('hidden');
+            }
+          });
+
+          ansBox.appendChild(anaWrap);
           card.appendChild(ansBox);
         }
 
@@ -2051,6 +2529,21 @@
       buildDeck(false);
     });
 
+    document.getElementById('btnLpWrongJump').addEventListener('click', () => {
+      if (state.examMode) {
+        showToast('请先退出考试模式再切换错题本');
+        return;
+      }
+      if (state.typeFilters.has('wrong')) {
+        state.typeFilters = new Set(['all']);
+        buildDeck(false);
+        showToast('已切回全部题目');
+      } else {
+        state.typeFilters = new Set(['wrong']);
+        buildDeck(false);
+        showToast('已切换到错题本');
+      }
+    });
     document.getElementById('btnScopeAll').addEventListener('click', () => setChapterScope(CHAPTERS.map(c => c.id)));
     document.getElementById('btnScopeVat').addEventListener('click', () => setChapterScope(['ch2_1', 'ch2_2', 'ch2_3', 'ch_test']));
     document.getElementById('btnScopeCons').addEventListener('click', () => setChapterScope(['ch3_1', 'ch3_2']));
@@ -2130,6 +2623,28 @@
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      const calcPanel = document.getElementById('calcPanel');
+      const calcBody = document.getElementById('calcBody');
+      if (calcPanel && !calcPanel.classList.contains('hidden') && calcBody && !calcBody.classList.contains('hidden')) {
+        if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+          if (/^[0-9+\-*/().%=]$/.test(e.key)) {
+            e.preventDefault();
+            insertCalcToken(e.key);
+            return;
+          }
+          if (e.key === 'Backspace') {
+            e.preventDefault();
+            insertCalcToken('BACK');
+            return;
+          }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            insertCalcToken('=');
+            return;
+          }
+        }
+      }
       const q = state.deck[state.currentIndex];
       if (!q) return;
 
@@ -2573,7 +3088,8 @@
         updatedAt: new Date().toISOString(),
         favorites: [...state.favorites],
         wrongBook: [...state.wrongBook],
-        editedAnalysis: state.editedAnalysis
+        editedAnalysis: state.editedAnalysis,
+        editedAnalysisImages: state.editedAnalysisImages
       };
     }
 
@@ -2595,6 +3111,14 @@
           addedWrong++;
         }
       });
+      if (payload.editedAnalysisImages && typeof payload.editedAnalysisImages === 'object') {
+        Object.entries(payload.editedAnalysisImages).forEach(([qId, arr]) => {
+          if (Array.isArray(arr) && arr.length > 0 && (!state.editedAnalysisImages[qId] || state.editedAnalysisImages[qId].length === 0)) {
+            state.editedAnalysisImages[qId] = arr;
+          }
+        });
+        saveEditedAnalysisImages();
+      }
       if (payload.editedAnalysis && typeof payload.editedAnalysis === 'object') {
         Object.entries(payload.editedAnalysis).forEach(([qId, txt]) => {
           if (typeof txt === 'string' && txt.trim() && !Object.prototype.hasOwnProperty.call(state.editedAnalysis, qId)) {
@@ -2746,12 +3270,80 @@
       }
     }
 
+    function renderPartialResetList() {
+      const listEl = document.getElementById('resetChapterList');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+      CHAPTERS.forEach(ch => {
+        const chQs = ALL_QUESTIONS.filter(q => q.chapterId === ch.id);
+        const answeredCount = chQs.filter(q => {
+          if (q.type === '阅读理解') {
+            const sa = state.subAnswers[q.id] || {};
+            return Object.keys(sa).length === q.subQuestions.length;
+          }
+          return !!state.submitted[q.id];
+        }).length;
+
+        const label = document.createElement('label');
+        label.className = 'flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-[#D4DEE8] bg-white text-xs cursor-pointer hover:bg-[#F8FAFC] transition';
+        label.innerHTML = `
+          <span class="flex items-center gap-1.5 min-w-0">
+            <input type="checkbox" value="${escapeHtml(ch.id)}" class="reset-ch-cb rounded border-[#CBD6E2] text-[#1E3A5F]" ${answeredCount > 0 ? '' : 'disabled'} />
+            <span class="truncate ${answeredCount > 0 ? 'text-[#0F172A]' : 'text-[#94A3B8]'}">${escapeHtml(ch.name)}</span>
+          </span>
+          <span class="text-[11px] shrink-0 ${answeredCount > 0 ? 'text-[#1E3A5F] font-semibold' : 'text-[#94A3B8]'}">已答 ${answeredCount}</span>
+        `;
+        listEl.appendChild(label);
+      });
+    }
+
+    function clearProgressForQuestions(qs) {
+      let cleared = 0;
+      qs.forEach(q => {
+        const had = state.submitted[q.id] || state.userAnswers[q.id] || state.subAnswers[q.id];
+        if (had) cleared++;
+        delete state.userAnswers[q.id];
+        delete state.submitted[q.id];
+        delete state.subAnswers[q.id];
+      });
+      saveProgress();
+      updateSyncSummary();
+      renderPartialResetList();
+      buildDeck(false);
+      return cleared;
+    }
+
     document.getElementById('btnOpenSync').addEventListener('click', () => {
       updateSyncSummary();
+      renderPartialResetList();
       document.getElementById('syncModal').classList.remove('hidden');
     });
     document.getElementById('btnCloseSync').addEventListener('click', () => {
       document.getElementById('syncModal').classList.add('hidden');
+    });
+    document.getElementById('btnTogglePartialReset').addEventListener('click', () => {
+      const panel = document.getElementById('partialResetPanel');
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) {
+        renderPartialResetList();
+      }
+    });
+    document.getElementById('btnResetCurrentScope').addEventListener('click', () => {
+      const pool = getFilteredPool();
+      const count = clearProgressForQuestions(pool);
+      showToast(count > 0 ? `已清空当前筛选范围内的 ${count} 题做题记录` : '当前筛选范围内暂无做题记录');
+    });
+    document.getElementById('btnResetCheckedChapters').addEventListener('click', () => {
+      const checkedIds = new Set(
+        Array.from(document.querySelectorAll('.reset-ch-cb:checked')).map(cb => cb.value)
+      );
+      if (checkedIds.size === 0) {
+        showToast('请先勾选至少一个有做题记录的章节');
+        return;
+      }
+      const targetQs = ALL_QUESTIONS.filter(q => checkedIds.has(q.chapterId));
+      const count = clearProgressForQuestions(targetQs);
+      showToast(`已清空所选章节的 ${count} 题做题记录（保留收藏与错题本）`);
     });
     document.getElementById('btnResetProgress').addEventListener('click', () => {
       state.userAnswers = {};
@@ -2759,8 +3351,9 @@
       state.subAnswers = {};
       saveProgress();
       updateSyncSummary();
+      renderPartialResetList();
       buildDeck(false);
-      showToast('已清空本地做题进度（保留收藏、错题本与新题）');
+      showToast('已清空全部本地做题进度（保留收藏、错题本与新题）');
     });
     document.getElementById('btnCopySyncCode').addEventListener('click', async () => {
       try {
@@ -2966,6 +3559,7 @@
       }
       inp.value += tok;
       updateCalcPreview();
+      inp.focus();
     }
 
     function updateMainCalcPadding() {
@@ -2982,8 +3576,12 @@
       const panel = document.getElementById('calcPanel');
       panel.classList.toggle('hidden');
       updateMainCalcPadding();
-      if (!panel.classList.contains('hidden') && window.innerWidth >= 640) {
-        document.getElementById('calcExprInput').focus();
+      if (!panel.classList.contains('hidden')) {
+        const inp = document.getElementById('calcExprInput');
+        if (inp) {
+          inp.focus();
+          setTimeout(() => inp.focus(), 0);
+        }
       }
     });
     document.getElementById('btnCloseCalc').addEventListener('click', () => {
@@ -3054,6 +3652,73 @@
         panel.style.top = Math.max(8, Math.min(window.innerHeight - panel.offsetHeight - 8, origTop + e.clientY - startY)) + 'px';
       });
       window.addEventListener('mouseup', () => { dragging = false; });
+
+      // Load saved calculator size on desktop
+      const CALC_SIZE_KEY = 'tax_law_quiz_calc_size_v1';
+      try {
+        const savedSize = JSON.parse(localStorage.getItem(CALC_SIZE_KEY) || 'null');
+        if (savedSize && window.innerWidth >= 640) {
+          if (savedSize.w) panel.style.width = savedSize.w + 'px';
+          if (savedSize.h) panel.style.height = Math.max(300, savedSize.h) + 'px';
+        }
+      } catch (e) {}
+
+      let resizing = null; // 'br' or 'tl'
+      let rStartX = 0, rStartY = 0, rOrigW = 0, rOrigH = 0, rOrigLeft = 0, rOrigTop = 0;
+
+      function startResize(mode, clientX, clientY) {
+        resizing = mode;
+        const rect = panel.getBoundingClientRect();
+        panel.style.left = rect.left + 'px';
+        panel.style.top = rect.top + 'px';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        rStartX = clientX;
+        rStartY = clientY;
+        rOrigW = rect.width;
+        rOrigH = rect.height;
+        rOrigLeft = rect.left;
+        rOrigTop = rect.top;
+      }
+
+      document.getElementById('calcResizeBR')?.addEventListener('mousedown', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        startResize('br', e.clientX, e.clientY);
+      });
+      document.getElementById('calcResizeTL')?.addEventListener('mousedown', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        startResize('tl', e.clientX, e.clientY);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!resizing) return;
+        const dx = e.clientX - rStartX;
+        const dy = e.clientY - rStartY;
+        if (resizing === 'br') {
+          const nw = Math.max(260, Math.min(window.innerWidth - rOrigLeft - 8, rOrigW + dx));
+          const nh = Math.max(290, Math.min(window.innerHeight - rOrigTop - 8, rOrigH + dy));
+          panel.style.width = nw + 'px';
+          panel.style.height = nh + 'px';
+        } else if (resizing === 'tl') {
+          const maxW = rOrigLeft + rOrigW - 8;
+          const maxH = rOrigTop + rOrigH - 8;
+          const nw = Math.max(260, Math.min(maxW, rOrigW - dx));
+          const nh = Math.max(290, Math.min(maxH, rOrigH - dy));
+          panel.style.width = nw + 'px';
+          panel.style.height = nh + 'px';
+          panel.style.left = (rOrigLeft + rOrigW - nw) + 'px';
+          panel.style.top = (rOrigTop + rOrigH - nh) + 'px';
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!resizing) return;
+        resizing = null;
+        try {
+          const rect = panel.getBoundingClientRect();
+          localStorage.setItem(CALC_SIZE_KEY, JSON.stringify({ w: Math.round(rect.width), h: Math.round(rect.height) }));
+        } catch (e) {}
+      });
     })();
 
     // Initialize
@@ -3071,6 +3736,8 @@
     });
     document.getElementById('btnSearchToggleAllAns').addEventListener('click', () => {
       state.searchShowAllAns = !state.searchShowAllAns;
+      state.searchForceHideAnswered = !state.searchShowAllAns;
+      state.searchCardOverrides = {};
       renderSearchResults();
     });
     document.querySelectorAll('.sscope-btn').forEach(btn => {
@@ -3099,13 +3766,16 @@
     });
 
     loadWrongBook();
+    let mainDraftImages = [];
     function openMainAnalysisEditor() {
       const q = state.deck[state.currentIndex];
       if (!q) return;
       document.getElementById('feedbackAnalysisView').classList.add('hidden');
       document.getElementById('feedbackAnalysisEditor').classList.remove('hidden');
       document.getElementById('anaEditorTextarea').value = getQuestionAnalysis(q);
-      const hasOverride = Object.prototype.hasOwnProperty.call(state.editedAnalysis, q.id);
+      mainDraftImages = [...(state.editedAnalysisImages[q.id] || [])];
+      renderDraftImages(document.getElementById('anaImagePreviews'), mainDraftImages);
+      const hasOverride = Object.prototype.hasOwnProperty.call(state.editedAnalysis, q.id) || (state.editedAnalysisImages[q.id] && state.editedAnalysisImages[q.id].length > 0);
       document.getElementById('btnResetAnalysis').classList.toggle('hidden', !hasOverride);
       const ta = document.getElementById('anaEditorTextarea');
       autoGrowTextarea(ta);
@@ -3113,6 +3783,19 @@
     }
     document.getElementById('btnEditAnalysis').addEventListener('click', openMainAnalysisEditor);
     document.getElementById('feedbackAnalysis').addEventListener('click', openMainAnalysisEditor);
+    document.getElementById('btnAddAnaImg').addEventListener('click', () => {
+      document.getElementById('anaImgFileInput').click();
+    });
+    document.getElementById('anaImgFileInput').addEventListener('change', async (e) => {
+      await handleImageFilesIntoDraft(e.target.files, mainDraftImages, document.getElementById('anaImagePreviews'));
+      e.target.value = '';
+    });
+    bindImagePasteAndDrop(
+      document.getElementById('feedbackAnalysisEditor'),
+      document.getElementById('anaEditorTextarea'),
+      document.getElementById('anaImagePreviews'),
+      () => mainDraftImages
+    );
     document.getElementById('btnCancelAnalysis').addEventListener('click', () => {
       const q = state.deck[state.currentIndex];
       renderQuestionAnalysis(q, q && q.type !== '阅读理解');
@@ -3122,7 +3805,13 @@
       if (!q) return;
       const val = document.getElementById('anaEditorTextarea').value.trim();
       state.editedAnalysis[q.id] = val;
+      if (mainDraftImages.length > 0) {
+        state.editedAnalysisImages[q.id] = [...mainDraftImages];
+      } else {
+        delete state.editedAnalysisImages[q.id];
+      }
       saveEditedAnalysis();
+      saveEditedAnalysisImages();
       maybeAutoSync();
       renderQuestionAnalysis(q, q.type !== '阅读理解');
       showToast('已保存解析');
@@ -3135,9 +3824,15 @@
       el.style.height = Math.min(380, Math.max(140, el.scrollHeight + 4)) + 'px';
     }
     document.getElementById('anaEditorTextarea').addEventListener('input', (e) => autoGrowTextarea(e.target));
+    document.getElementById('btnHighlightAna').addEventListener('click', () => {
+      toggleHighlightSelection(document.getElementById('anaEditorTextarea'));
+    });
     document.getElementById('anaEditorTextarea').addEventListener('keydown', (e) => {
       e.stopPropagation();
-      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        toggleHighlightSelection(e.target);
+      } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
         commitAnalysisEdit();
       } else if (e.key === 'Escape') {
@@ -3149,13 +3844,20 @@
       const q = state.deck[state.currentIndex];
       if (!q) return;
       delete state.editedAnalysis[q.id];
+      delete state.editedAnalysisImages[q.id];
       saveEditedAnalysis();
+      saveEditedAnalysisImages();
       maybeAutoSync();
       renderQuestionAnalysis(q, q.type !== '阅读理解');
       showToast('已恢复原解析');
     });
+    document.getElementById('imgLightboxModal').addEventListener('click', () => {
+      document.getElementById('imgLightboxModal').classList.add('hidden');
+      document.getElementById('imgLightboxTarget').src = '';
+    });
 
     loadEditedAnalysis();
+    loadEditedAnalysisImages();
     loadCustomBank();
     loadProgress();
     loadGhConfig();
