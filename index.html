@@ -994,17 +994,29 @@
       }
     }
 
+    function renderInlineBold(text, searchQuery = '') {
+      const parts = String(text || '').split(/(\*\*[^*\n]+?\*\*)/g);
+      return parts.map(part => {
+        if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+          const inner = part.slice(2, -2);
+          const innerHtml = searchQuery ? highlightText(inner, searchQuery) : escapeHtml(inner);
+          return `<strong class="font-bold text-[#0F172A]">${innerHtml}</strong>`;
+        }
+        return searchQuery ? highlightText(part, searchQuery) : escapeHtml(part);
+      }).join('');
+    }
+
     function renderAnalysisRichText(text, searchQuery = '') {
       const raw = String(text || '');
-      // Split on ==highlighted== spans
+      // Split on ==highlighted== spans first, then **bold** inside each segment
       const parts = raw.split(/(==[\s\S]*?==)/g);
       return parts.map(part => {
         if (part.startsWith('==') && part.endsWith('==') && part.length > 4) {
           const inner = part.slice(2, -2);
-          const innerHtml = searchQuery ? highlightText(inner, searchQuery) : escapeHtml(inner);
+          const innerHtml = renderInlineBold(inner, searchQuery);
           return `<mark class="bg-amber-200/90 text-[#0F172A] px-1 rounded font-semibold">${innerHtml}</mark>`;
         }
-        return searchQuery ? highlightText(part, searchQuery) : escapeHtml(part);
+        return renderInlineBold(part, searchQuery);
       }).join('');
     }
 
